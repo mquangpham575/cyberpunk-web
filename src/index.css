@@ -33,12 +33,12 @@ body {
 }
 
 @keyframes marquee {
-  0% {
+  from {
     transform: translateX(0);
   }
-  100% {
+  to {
     transform: translateX(-100%);
-  }
+  } /* Dịch chuyển hết chiều dài của chính nó */
 }
 
 @keyframes flicker {
