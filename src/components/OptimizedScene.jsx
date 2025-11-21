@@ -143,7 +143,7 @@ const OptimizedScene = ({ scrollY }) => {
     <div className="fixed inset-0 z-0 pointer-events-none bg-cyber-black">
       <Canvas
         dpr={[1, 1.5]}
-        camera={{ position: [0, 0, 9], fov: 35 }}
+        camera={{ position: [0, 0, 11], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
       >
         <fog attach="fog" args={["#050505", 5, 25]} />
