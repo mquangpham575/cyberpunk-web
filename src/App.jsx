@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import OptimizedScene from "./components/OptimizedScene";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
+import ArsenalSection from "./components/ArsenalSection"; // <--- IMPORT MỚI
 
 function App() {
   const { scrollY } = useScroll();
@@ -13,13 +14,10 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      {/* 3D Background */}
       <OptimizedScene scrollY={scrollY} />
 
-      {/* Wrapper chính */}
       <div className="relative z-10 flex flex-col">
-        {/* --- KHỐI 1: HEADER (Độc lập, luôn ở trên cùng) --- */}
-        {/* pt-6 md:pt-8: Padding an toàn cho cả Mobile và PC */}
+        {/* Header */}
         <header className="w-full container mx-auto px-6 md:px-12 pt-6 md:pt-8 pb-4 flex justify-between items-center border-b border-white/10 backdrop-blur-sm z-50">
           <div className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow">
             ARASAKA<span className="text-white">_LABS</span>
@@ -29,12 +27,9 @@ function App() {
           </div>
         </header>
 
-        {/* --- KHỐI 2: HERO SECTION (Nội dung chính) --- */}
-        {/* min-h-[80vh]: Chiều cao tối thiểu để đẩy nội dung ra giữa màn hình */}
-        {/* flex items-center: Căn giữa nội dung theo chiều dọc */}
+        {/* Hero Section */}
         <main className="container mx-auto px-6 md:px-12 min-h-[80vh] flex items-center pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-            {/* Text Content */}
             <motion.div
               style={{ y: yText }}
               className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -67,13 +62,15 @@ function App() {
               </div>
             </motion.div>
 
-            {/* 3D Placeholder */}
             <div className="hidden lg:block lg:col-span-5 h-full min-h-[300px]"></div>
           </div>
         </main>
 
-        {/* --- KHỐI 3: DASHBOARD SECTION --- */}
+        {/* Info Dashboard */}
         <InfoSection />
+
+        {/* --- PHẦN MỚI: KHO VŨ KHÍ / CHỢ ĐEN --- */}
+        <ArsenalSection />
 
         {/* Footer */}
         <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
@@ -81,8 +78,7 @@ function App() {
         </footer>
       </div>
 
-      {/* Bottom Decoration Line */}
-      <div className="fixed bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
+      <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
     </div>
   );
 }

@@ -26,7 +26,7 @@ export const CyberButton = ({ children, onClick, variant = "yellow" }) => {
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
         // GIẢM CỠ CHỮ: text-lg md:text-xl -> text-base md:text-lg
-        className={`relative group p-[2px] font-display text-base md:text-lg font-bold uppercase tracking-wider transition-all duration-150 ${config.borderColor}`}
+        className={`relative group p-0.5 font-display text-base md:text-lg font-bold uppercase tracking-wider transition-all duration-150 ${config.borderColor}`}
         style={{ clipPath: commonClipPath }}
       >
         <div

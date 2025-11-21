@@ -68,17 +68,37 @@ body {
   }
 }
 
-/* Utility class cho thanh cuộn đẹp hơn */
+/* --- CUSTOM SCROLLBAR (CROSS-BROWSER) --- */
+
+/* 1. Hỗ trợ Firefox (Dùng chuẩn mới) */
+html {
+  scrollbar-width: thin; /* Thanh cuộn nhỏ */
+  scrollbar-color: #333 var(--color-cyber-black); /* Màu thanh / Màu nền */
+}
+
+/* 2. Hỗ trợ Chrome, Edge, Safari (Webkit) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 8px; /* Độ rộng dọc */
+  height: 8px; /* Độ cao ngang (nếu có scroll ngang) */
 }
+
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: var(--color-cyber-black);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background-color: #333;
+  border-radius: 0px; /* Cyberpunk thì nên để vuông vức (0px) hoặc bo nhẹ (2px) */
+  border: 1px solid var(--color-cyber-black); /* Viền giả để tách biệt */
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-cyber-pink);
+  background-color: var(--color-cyber-pink); /* Đổi màu khi hover */
+  box-shadow: 0 0 10px var(--color-cyber-pink); /* Thêm hiệu ứng phát sáng (Glow) */
+}
+
+/* Sửa lỗi nền trắng khi kéo quá đà (Overscroll) trên Mac/Mobile */
+html,
+body {
+  overscroll-behavior: none;
 }
