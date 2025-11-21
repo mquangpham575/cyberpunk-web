@@ -3,14 +3,27 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import OptimizedScene from "./components/OptimizedScene";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
-import ArsenalSection from "./components/ArsenalSection"; // <--- IMPORT MỚI
+import ArsenalSection from "./components/ArsenalSection";
+import AIChat from "./components/AIChat";
 
 function App() {
   const { scrollY } = useScroll();
   const yText = useTransform(scrollY, [0, 500], [0, 80]);
 
-  const playHover = () => {};
+  // Hàm âm thanh giả lập (nếu bạn đã cài useSound thì dùng hook, ở đây mình để trống)
   const playClick = () => {};
+  const playHover = () => {};
+
+  // --- HÀM MỚI: CUỘN XUỐNG CHỢ ĐEN ---
+  const handleEnterSystem = () => {
+    playClick(); // 1. Chơi âm thanh click
+
+    // 2. Tìm section theo ID và cuộn mượt xuống
+    const marketSection = document.getElementById("black-market");
+    if (marketSection) {
+      marketSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
@@ -53,9 +66,11 @@ function App() {
                 className="flex flex-wrap gap-4 pt-6"
                 onMouseEnter={playHover}
               >
-                <CyberButton variant="yellow" onClick={playClick}>
-                  ENTER SYSTEM
+                {/* --- CẬP NHẬT NÚT TẠI ĐÂY --- */}
+                <CyberButton variant="yellow" onClick={handleEnterSystem}>
+                  ENTER MARKET
                 </CyberButton>
+
                 <CyberButton variant="blue" onClick={playClick}>
                   VIEW DOCS
                 </CyberButton>
@@ -66,19 +81,16 @@ function App() {
           </div>
         </main>
 
-        {/* Info Dashboard */}
         <InfoSection />
-
-        {/* --- PHẦN MỚI: KHO VŨ KHÍ / CHỢ ĐEN --- */}
         <ArsenalSection />
 
-        {/* Footer */}
         <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
           <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
         </footer>
       </div>
 
       <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
+      <AIChat />
     </div>
   );
 }

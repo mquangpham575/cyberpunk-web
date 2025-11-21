@@ -10,9 +10,11 @@ import {
   Skull,
   Flame,
   Radio,
-} from "lucide-react";
+  Search,
+  X,
+} from "lucide-react"; // Thêm icon X
 
-// --- DỮ LIỆU GIỮ NGUYÊN (12 Món) ---
+// --- DỮ LIỆU (Giữ nguyên) ---
 const ITEMS = [
   {
     id: 1,
@@ -142,23 +144,17 @@ const RARITY_COLORS = {
   rare: "border-cyber-blue text-cyber-blue shadow-[0_0_10px_#00f0ff]",
 };
 
-// 1. CẤU HÌNH ANIMATION (Variants)
-// Đơn giản hóa: Chỉ mờ dần và trôi nhẹ lên 10px
+// Cấu hình Animation (Giữ nguyên)
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05, // Thời gian trễ giữa các món cực ngắn (0.05s) tạo cảm giác nhanh
-    },
-  },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 10 }, // Di chuyển ít hơn (10px) để mượt hơn
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }, // Thời gian ngắn (0.3s)
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
+// Component Item Card (Giữ nguyên)
 const ItemCard = ({ item }) => {
   const isSoldOut = item.status === "sold_out";
   const isPreOrder = item.status === "pre_order";
@@ -168,14 +164,13 @@ const ItemCard = ({ item }) => {
 
   return (
     <motion.div
-      variants={itemVariants} // Sử dụng variants từ cha
+      variants={itemVariants}
       className={`
         relative bg-black/40 backdrop-blur-md border p-6 flex flex-col gap-4 group hover:-translate-y-1 transition-transform duration-200
         ${RARITY_COLORS[item.rarity].split(" ")[0]} 
         ${cardOpacity}
       `}
     >
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div className={`p-3 bg-black/50 border ${RARITY_COLORS[item.rarity]}`}>
           <item.icon size={24} />
@@ -197,7 +192,6 @@ const ItemCard = ({ item }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div>
         <h3 className="font-display text-2xl text-white mb-2 group-hover:text-cyber-blue transition-colors break-words leading-none min-h-[3rem] flex items-end">
           {item.name.replace(/_/g, " ")}
@@ -214,7 +208,6 @@ const ItemCard = ({ item }) => {
         </p>
       </div>
 
-      {/* Footer Button */}
       <button
         disabled={isSoldOut}
         className={`
@@ -254,19 +247,25 @@ const ItemCard = ({ item }) => {
   );
 };
 
+// --- MAIN SECTION ---
 const ArsenalSection = () => {
   const [activeFilter, setActiveFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredItems = ITEMS.filter((item) => {
-    if (activeFilter === "ALL") return true;
-    return item.category === activeFilter;
+    const matchesCategory =
+      activeFilter === "ALL" || item.category === activeFilter;
+    const normalizedName = item.name.replace(/_/g, " ").toLowerCase();
+    const normalizedQuery = searchQuery.toLowerCase();
+    const matchesSearch = normalizedName.includes(normalizedQuery);
+    return matchesCategory && matchesSearch;
   });
 
   const FilterButton = ({ label, filterKey }) => (
     <button
       onClick={() => setActiveFilter(filterKey)}
       className={`
-        px-4 py-2 text-xs font-bold font-mono border transition-all duration-200
+        px-4 py-2.5 text-xs font-bold font-mono border transition-all duration-200
         ${
           activeFilter === filterKey
             ? "bg-cyber-blue text-black border-cyber-blue shadow-[0_0_10px_#00f0ff]"
@@ -279,11 +278,14 @@ const ArsenalSection = () => {
   );
 
   return (
-    <section className="relative z-10 w-full py-24 border-t border-white/10 bg-black/20">
+    <section
+      id="black-market"
+      className="relative z-10 w-full py-24 border-t border-white/10 bg-black/20"
+    >
       <div className="container mx-auto px-6 md:px-12">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-          <div>
+        {/* Header Section */}
+        <div className="flex flex-col xl:flex-row justify-between items-end mb-12 gap-8">
+          <div className="w-full xl:w-auto">
             <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-2">
               BLACK<span className="text-cyber-pink">_MARKET</span>
             </h2>
@@ -293,25 +295,70 @@ const ArsenalSection = () => {
             </p>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
-            <FilterButton label="ALL_GEAR" filterKey="ALL" />
-            <FilterButton label="WEAPONS" filterKey="WEAPONS" />
-            <FilterButton label="CYBERWARE" filterKey="CYBERWARE" />
+          {/* Controls */}
+          <div className="flex flex-col md:flex-row gap-4 items-end w-full xl:w-auto">
+            {/* --- FIX LỖI CLICK SEARCH BAR TẠI ĐÂY --- */}
+            <div className="relative group w-full md:w-64">
+              {/* 1. Lớp Glow: Thêm pointer-events-none để click xuyên qua */}
+              <div className="absolute inset-0 bg-cyber-blue/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+
+              {/* 2. Icon Search: Thêm pointer-events-none để click xuyên qua */}
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyber-blue transition-colors pointer-events-none"
+                size={16}
+              />
+
+              {/* 3. Input: Thêm relative z-10 để nó nổi lên trên cùng, đảm bảo nhận được click */}
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="SEARCH PROTOCOL..."
+                className="w-full bg-black/50 border border-white/20 py-2.5 pl-10 pr-8 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue transition-colors uppercase placeholder:text-gray-700 relative z-10"
+              />
+
+              {/* 4. Nút Xóa (Clear): Chỉ hiện khi có text */}
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white z-20"
+                >
+                  <X size={14} />
+                </button>
+              )}
+
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-gray-500 group-focus-within:border-cyber-blue transition-colors pointer-events-none" />
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <FilterButton label="ALL" filterKey="ALL" />
+              <FilterButton label="WEAPONS" filterKey="WEAPONS" />
+              <FilterButton label="CYBERWARE" filterKey="CYBERWARE" />
+            </div>
           </div>
         </div>
 
-        {/* Grid Layout Tối Ưu */}
-        <motion.div
-          key={activeFilter} // KEY QUAN TRỌNG: Khi đổi filter, React sẽ reset animation
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {filteredItems.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
-        </motion.div>
+        {/* Grid Layout */}
+        {filteredItems.length > 0 ? (
+          <motion.div
+            key={activeFilter + searchQuery}
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredItems.map((item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
+          </motion.div>
+        ) : (
+          <div className="w-full py-20 text-center border border-dashed border-white/10 bg-black/20">
+            <p className="text-cyber-pink font-mono text-sm animate-pulse">
+              &gt;&gt; NO_DATA_FOUND: 0 RESULTS MATCHING "
+              {searchQuery.toUpperCase()}"
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
