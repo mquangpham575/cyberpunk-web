@@ -12,7 +12,8 @@ import {
   Radio,
   Search,
   X,
-} from "lucide-react"; // Thêm icon X
+  Check,
+} from "lucide-react";
 
 // --- DỮ LIỆU (Giữ nguyên) ---
 const ITEMS = [
@@ -144,7 +145,6 @@ const RARITY_COLORS = {
   rare: "border-cyber-blue text-cyber-blue shadow-[0_0_10px_#00f0ff]",
 };
 
-// Cấu hình Animation (Giữ nguyên)
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -154,10 +154,21 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
-// Component Item Card (Giữ nguyên)
-const ItemCard = ({ item }) => {
+// Component Item Card Updated
+const ItemCard = ({ item, addToCart }) => {
+  const [isAdded, setIsAdded] = useState(false); // State để hiện feedback "Đã thêm"
   const isSoldOut = item.status === "sold_out";
   const isPreOrder = item.status === "pre_order";
+
+  const handleAddToCart = () => {
+    if (isSoldOut) return;
+    addToCart(item);
+
+    // Hiệu ứng visual feedback
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1000);
+  };
+
   const cardOpacity = isSoldOut
     ? "opacity-50 grayscale pointer-events-none"
     : "opacity-100";
@@ -171,6 +182,7 @@ const ItemCard = ({ item }) => {
         ${cardOpacity}
       `}
     >
+      {/* (Phần Header Card giữ nguyên) */}
       <div className="flex justify-between items-start">
         <div className={`p-3 bg-black/50 border ${RARITY_COLORS[item.rarity]}`}>
           <item.icon size={24} />
@@ -193,7 +205,7 @@ const ItemCard = ({ item }) => {
       </div>
 
       <div>
-        <h3 className="font-display text-2xl text-white mb-2 group-hover:text-cyber-blue transition-colors break-words leading-none min-h-[3rem] flex items-end">
+        <h3 className="font-display text-2xl text-white mb-2 group-hover:text-cyber-blue transition-colors wrap-break-word leading-none min-h-12 flex items-end">
           {item.name.replace(/_/g, " ")}
         </h3>
         <span
@@ -208,26 +220,40 @@ const ItemCard = ({ item }) => {
         </p>
       </div>
 
+      {/* Button Purchase Updated */}
       <button
+        onClick={handleAddToCart}
         disabled={isSoldOut}
         className={`
           mt-4 w-full py-2 border text-xs font-bold uppercase tracking-widest transition-all relative overflow-hidden group/btn duration-150
           ${
             isSoldOut
               ? "border-gray-700 text-gray-600 cursor-not-allowed"
+              : isAdded
+              ? "border-green-500 text-green-500 bg-green-500/10"
               : "border-white/20 hover:bg-white hover:text-black"
           }
           ${
-            isPreOrder
+            !isAdded && isPreOrder
               ? "border-cyber-yellow text-cyber-yellow hover:bg-cyber-yellow hover:text-black"
               : ""
           }
         `}
       >
-        <span className="relative z-10">
-          {isSoldOut ? "UNAVAILABLE" : isPreOrder ? "RESERVE NOW" : "PURCHASE"}
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          {isSoldOut ? (
+            "UNAVAILABLE"
+          ) : isAdded ? (
+            <>
+              ADDED <Check size={14} />
+            </>
+          ) : isPreOrder ? (
+            "RESERVE NOW"
+          ) : (
+            "PURCHASE"
+          )}
         </span>
-        {!isSoldOut && (
+        {!isSoldOut && !isAdded && (
           <div
             className={`absolute inset-0 transform scale-x-0 group-hover/btn:scale-x-100 transition-transform origin-left duration-150
             ${isPreOrder ? "bg-cyber-yellow" : "bg-white"}
@@ -247,8 +273,9 @@ const ItemCard = ({ item }) => {
   );
 };
 
-// --- MAIN SECTION ---
-const ArsenalSection = () => {
+// --- MAIN SECTION Updated ---
+// Nhận thêm prop addToCart từ App
+const ArsenalSection = ({ addToCart }) => {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -297,18 +324,12 @@ const ArsenalSection = () => {
 
           {/* Controls */}
           <div className="flex flex-col md:flex-row gap-4 items-end w-full xl:w-auto">
-            {/* --- FIX LỖI CLICK SEARCH BAR TẠI ĐÂY --- */}
             <div className="relative group w-full md:w-64">
-              {/* 1. Lớp Glow: Thêm pointer-events-none để click xuyên qua */}
               <div className="absolute inset-0 bg-cyber-blue/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
-
-              {/* 2. Icon Search: Thêm pointer-events-none để click xuyên qua */}
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyber-blue transition-colors pointer-events-none"
                 size={16}
               />
-
-              {/* 3. Input: Thêm relative z-10 để nó nổi lên trên cùng, đảm bảo nhận được click */}
               <input
                 type="text"
                 value={searchQuery}
@@ -316,8 +337,6 @@ const ArsenalSection = () => {
                 placeholder="SEARCH PROTOCOL..."
                 className="w-full bg-black/50 border border-white/20 py-2.5 pl-10 pr-8 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue transition-colors uppercase placeholder:text-gray-700 relative z-10"
               />
-
-              {/* 4. Nút Xóa (Clear): Chỉ hiện khi có text */}
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
@@ -326,7 +345,6 @@ const ArsenalSection = () => {
                   <X size={14} />
                 </button>
               )}
-
               <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-gray-500 group-focus-within:border-cyber-blue transition-colors pointer-events-none" />
             </div>
 
@@ -348,7 +366,7 @@ const ArsenalSection = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredItems.map((item) => (
-              <ItemCard key={item.id} item={item} />
+              <ItemCard key={item.id} item={item} addToCart={addToCart} />
             ))}
           </motion.div>
         ) : (

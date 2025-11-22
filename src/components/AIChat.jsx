@@ -207,7 +207,7 @@ const AIChat = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="ml-auto block w-14 h-14 bg-cyber-blue text-black rounded-full shadow-[0_0_20px_#00f0ff] border-2 border-white flex items-center justify-center relative group"
+        className="ml-auto w-14 h-14 bg-cyber-blue text-black rounded-full shadow-[0_0_20px_#00f0ff] border-2 border-white flex items-center justify-center relative group"
       >
         <div className="absolute inset-0 rounded-full border border-dashed border-black/30 animate-[spin_10s_linear_infinite]" />
         {isOpen ? <X size={28} /> : <MessageSquare size={28} />}

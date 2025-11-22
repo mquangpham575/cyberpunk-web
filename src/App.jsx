@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ChevronDown, Volume2, VolumeX } from "lucide-react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
+import {
+  ChevronDown,
+  Volume2,
+  VolumeX,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react"; // Thêm icon ShoppingBag, Trash2
 import OptimizedScene from "./components/OptimizedScene";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
@@ -13,7 +24,28 @@ function App() {
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
-  // --- LOGIC AUDIO ---
+  // --- LOGIC GIỎ HÀNG ---
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (item) => {
+    // Thêm item vào giỏ hàng
+    setCart((prev) => [...prev, item]);
+  };
+
+  const removeFromCart = (indexToRemove) => {
+    setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => {
+      // Xử lý giá tiền: loại bỏ dấu phẩy, xử lý "???"
+      if (item.price === "???") return total;
+      const priceNumber = parseInt(item.price.replace(/,/g, ""), 10);
+      return total + (isNaN(priceNumber) ? 0 : priceNumber);
+    }, 0);
+  };
+
+  // --- LOGIC AUDIO (Giữ nguyên) ---
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
 
@@ -21,24 +53,15 @@ function App() {
     audioRef.current = new Audio("/sounds/bgm.mp3");
     audioRef.current.loop = true;
     audioRef.current.volume = 0.3;
-
-    const playPromise = audioRef.current.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => setIsMuted(false)).catch(() => setIsMuted(true));
-    }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    // Autoplay policy có thể chặn, cần user interaction
   }, []);
 
   const toggleAudio = () => {
     if (audioRef.current) {
       if (isMuted) {
-        audioRef.current.play();
+        audioRef.current
+          .play()
+          .catch((e) => console.log("Audio play failed:", e));
         setIsMuted(false);
       } else {
         audioRef.current.pause();
@@ -50,7 +73,8 @@ function App() {
   const playClick = () => {};
   const playHover = () => {};
 
-  const handleEnterSystem = () => {
+  const handleEnterMarket = () => {
+    // Đổi tên hàm
     playClick();
     document
       .getElementById("black-market")
@@ -70,32 +94,112 @@ function App() {
 
       <div className="relative z-10 flex flex-col">
         <section className="h-screen flex flex-col relative">
+          {/* HEADER */}
           <header className="w-full container mx-auto px-6 md:px-12 pt-6 md:pt-8 flex justify-between items-center z-50">
             <div className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow">
               ARASAKA<span className="text-white">_LABS</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="hidden md:block font-mono text-[10px] md:text-xs text-cyber-blue border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md">
-                SYS: NORMAL
-              </div>
+              {/* --- SHOPPING LIST ICON HOVER --- */}
+              <div className="group relative">
+                <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
+                  <span className="font-mono text-[10px] md:text-xs text-cyber-blue">
+                    SYS: NORMAL
+                  </span>
+                  <div className="w-px h-3 bg-cyber-blue/50"></div>
+                  <ShoppingBag size={14} className="text-cyber-blue" />
+                  {cart.length > 0 && (
+                    <span className="text-[10px] font-bold text-black bg-cyber-blue px-1 -ml-1">
+                      {cart.length}
+                    </span>
+                  )}
+                </div>
 
-              {/* NÚT BẬT/TẮT NHẠC */}
+                {/* --- DROPDOWN CART --- */}
+                <div className="absolute right-0 top-full mt-2 w-72 bg-black/90 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+                  {/* Decorative corners */}
+                  <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
+                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
+
+                  <div className="p-4">
+                    <h3 className="text-cyber-blue font-mono text-xs font-bold border-b border-white/10 pb-2 mb-2 flex justify-between">
+                      <span>// SHOPPING_LIST</span>
+                      <span>[{cart.length}]</span>
+                    </h3>
+
+                    {cart.length === 0 ? (
+                      <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
+                        Empty...
+                      </div>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
+                        {cart.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center bg-white/5 p-2 border border-white/5 hover:border-cyber-blue/50 transition-colors group/item"
+                          >
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <div
+                                className={`w-1 h-8 ${
+                                  item.rarity === "legendary"
+                                    ? "bg-cyber-yellow"
+                                    : item.rarity === "epic"
+                                    ? "bg-cyber-pink"
+                                    : "bg-cyber-blue"
+                                }`}
+                              ></div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-white font-mono text-[10px] truncate w-32">
+                                  {item.name}
+                                </span>
+                                <span className="text-gray-400 font-mono text-[9px]">
+                                  €$ {item.price}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart(index)}
+                              className="text-gray-600 hover:text-red-500 transition-colors p-1"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {cart.length > 0 && (
+                      <div className="border-t border-white/10 pt-2">
+                        <div className="flex justify-between items-center font-mono text-xs text-white mb-3">
+                          <span>TOTAL:</span>
+                          <span className="text-cyber-yellow">
+                            €$ {calculateTotal().toLocaleString()}
+                          </span>
+                        </div>
+                        <button className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest">
+                          CHECKOUT
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {/* --- END SHOPPING LIST --- */}
+
               <button
                 onClick={toggleAudio}
-                // SỬA: Đổi gap-1.5 thành gap-1 để các phần tử sát rạt vào nhau
                 className={`
-                    flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 group
-                    ${
-                      !isMuted
-                        ? "border-cyber-pink text-cyber-pink bg-cyber-pink/10 shadow-[0_0_10px_rgba(255,0,60,0.3)]"
-                        : "border-gray-600 text-gray-500 hover:border-white hover:text-white"
-                    }
-                  `}
+                  flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 group
+                  ${
+                    !isMuted
+                      ? "border-cyber-pink text-cyber-pink bg-cyber-pink/10 shadow-[0_0_10px_rgba(255,0,60,0.3)]"
+                      : "border-gray-600 text-gray-500 hover:border-white hover:text-white"
+                  }
+                `}
               >
                 {!isMuted ? (
                   <>
-                    {/* Khối Icon + Sóng nhạc */}
                     <div className="flex items-center gap-1">
                       <Volume2 size={14} />
                       <div className="flex gap-0.5 items-end h-3">
@@ -104,8 +208,6 @@ function App() {
                         <span className="w-0.5 bg-cyber-pink animate-[bounce_0.6s_infinite]" />
                       </div>
                     </div>
-
-                    {/* Chữ BGM: ON - Nằm ngay sát khối icon */}
                     <span className="font-mono text-[10px] font-bold">
                       BGM: ON
                     </span>
@@ -145,8 +247,9 @@ function App() {
                   className="flex flex-wrap gap-4 pt-6"
                   onMouseEnter={playHover}
                 >
-                  <CyberButton variant="yellow" onClick={handleEnterSystem}>
-                    ENTER SYSTEM
+                  {/* UPDATE: Đổi tên thành ENTER MARKET */}
+                  <CyberButton variant="yellow" onClick={handleEnterMarket}>
+                    ENTER MARKET
                   </CyberButton>
                   <CyberButton variant="blue" onClick={handleViewStatus}>
                     VIEW STATUS
@@ -173,7 +276,9 @@ function App() {
         </section>
 
         <InfoSection />
-        <ArsenalSection />
+
+        {/* Truyền addToCart vào ArsenalSection */}
+        <ArsenalSection addToCart={addToCart} />
 
         <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
           <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
