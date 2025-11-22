@@ -27,16 +27,21 @@ import BackToTop from "./components/BackToTop";
 
 /**
  * Cart Management Hook
+ * Cập nhật thêm: trả về 'lastUpdate' để báo hiệu cho UI
  */
 const useCart = () => {
   const [cart, setCart] = useState([]);
+  // Biến này dùng để kích hoạt hiển thị Header khi có thay đổi
+  const [lastUpdate, setLastUpdate] = useState(0);
 
   const addToCart = (item) => {
     setCart((prev) => [...prev, item]);
+    setLastUpdate(Date.now()); // Cập nhật timestamp mỗi khi thêm
   };
 
   const removeFromCart = (indexToRemove) => {
     setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setLastUpdate(Date.now()); // Cập nhật cả khi xóa (để user thấy số lượng giảm)
   };
 
   const total = useMemo(() => {
@@ -47,7 +52,7 @@ const useCart = () => {
     }, 0);
   }, [cart]);
 
-  return { cart, addToCart, removeFromCart, total };
+  return { cart, addToCart, removeFromCart, total, lastUpdate };
 };
 
 /**
@@ -84,24 +89,36 @@ const useAudio = (src) => {
 };
 
 // =========================================
-// COMPONENT: HEADER (SNAPPY SCROLL)
+// COMPONENT: HEADER (SMART SCROLL)
 // =========================================
 
-const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
+const Header = ({
+  cart,
+  removeFromCart,
+  total,
+  isMuted,
+  toggleAudio,
+  lastUpdate, // Nhận prop mới
+}) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
 
-  // Scroll Logic: Immediate hide on down, show on up
+  // 1. Logic Scroll: Ẩn khi xuống, Hiện khi lên
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious();
-
-    // Hide immediately if moving down and not at absolute top
-    if (latest > previous && latest > 0) {
+    if (latest > previous && latest > 150) {
       setHidden(true);
     } else {
       setHidden(false);
     }
   });
+
+  // 2. Logic Cart Update: Luôn hiện Header khi giỏ hàng thay đổi
+  useEffect(() => {
+    if (lastUpdate > 0) {
+      setHidden(false);
+    }
+  }, [lastUpdate]);
 
   return (
     <motion.header
@@ -110,9 +127,8 @@ const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
         hidden: { y: "-100%" },
       }}
       animate={hidden ? "hidden" : "visible"}
-      // Snappy transition: Fast (0.2s) and Linear
-      transition={{ duration: 0.2, ease: "linear" }}
-      className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm"
+      transition={{ duration: 0.35, ease: "easeInOut" }}
+      className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
     >
       <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
         {/* BRANDING */}
@@ -123,7 +139,6 @@ const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
         <div className="flex items-center gap-4">
           {/* CART SYSTEM */}
           <div className="group relative">
-            {/* Trigger Button */}
             <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
               <span className="font-mono text-[10px] md:text-xs text-cyber-blue">
                 SYS: NORMAL
@@ -139,7 +154,6 @@ const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
 
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-              {/* Decorative Corners */}
               <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
               <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
 
@@ -250,40 +264,36 @@ const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
 // =========================================
 
 function App() {
-  // --- Hooks & State ---
   const { scrollY } = useScroll();
-  const { cart, addToCart, removeFromCart, total } = useCart();
+  // Lấy thêm lastUpdate từ hook
+  const { cart, addToCart, removeFromCart, total, lastUpdate } = useCart();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
-  // --- Hero Animations ---
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
-  // --- Scroll Handler ---
   const handleScrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      {/* 3D Background */}
       <OptimizedScene scrollY={scrollY} />
 
       <div className="relative z-10 flex flex-col">
-        {/* --- HERO SECTION --- */}
         <section className="h-screen flex flex-col relative">
+          {/* Truyền lastUpdate vào Header */}
           <Header
             cart={cart}
             removeFromCart={removeFromCart}
             total={total}
             isMuted={isMuted}
             toggleAudio={toggleAudio}
+            lastUpdate={lastUpdate}
           />
 
-          {/* Padding-top to avoid overlap with fixed header */}
           <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-              {/* Left: Content */}
               <motion.div
                 style={{ y: yText, opacity: opacityText }}
                 className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -320,12 +330,10 @@ function App() {
                 </div>
               </motion.div>
 
-              {/* Right: 3D Spacer */}
               <div className="hidden lg:block lg:col-span-5 h-full min-h-[300px]"></div>
             </div>
           </main>
 
-          {/* Scroll Indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 10, 0] }}
@@ -340,7 +348,6 @@ function App() {
           </motion.div>
         </section>
 
-        {/* --- SECTIONS --- */}
         <InfoSection />
         <ArsenalSection addToCart={addToCart} />
 
@@ -349,7 +356,6 @@ function App() {
         </footer>
       </div>
 
-      {/* --- OVERLAYS --- */}
       <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
       <AIChat />
       <BackToTop />
