@@ -112,7 +112,7 @@ const Header = ({ cart, removeFromCart, total, isMuted, toggleAudio }) => {
       animate={hidden ? "hidden" : "visible"}
       // Snappy transition: Fast (0.2s) and Linear
       transition={{ duration: 0.2, ease: "linear" }}
-      className="fixed top-0 left-0 w-full z-50 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-sm"
+      className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm"
     >
       <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
         {/* BRANDING */}
