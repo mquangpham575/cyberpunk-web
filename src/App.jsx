@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ChevronDown } from "lucide-react"; // Thêm icon mũi tên
+import { ChevronDown, Volume2, VolumeX } from "lucide-react";
 import OptimizedScene from "./components/OptimizedScene";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
@@ -9,9 +9,42 @@ import AIChat from "./components/AIChat";
 
 function App() {
   const { scrollY } = useScroll();
-  // Parallax cho chữ: Trôi nhẹ khi cuộn
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
-  const opacityText = useTransform(scrollY, [0, 300], [1, 0]); // Mờ dần khi cuộn đi
+  const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
+
+  // --- LOGIC AUDIO ---
+  const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/bgm.mp3");
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.3;
+
+    const playPromise = audioRef.current.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => setIsMuted(false)).catch(() => setIsMuted(true));
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.play();
+        setIsMuted(false);
+      } else {
+        audioRef.current.pause();
+        setIsMuted(true);
+      }
+    }
+  };
 
   const playClick = () => {};
   const playHover = () => {};
@@ -32,26 +65,62 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      {/* 3D Background (Fixed) */}
       <OptimizedScene scrollY={scrollY} />
 
       <div className="relative z-10 flex flex-col">
-        {/* --- TRANG 1: HERO SECTION (FULL SCREEN) --- */}
         <section className="h-screen flex flex-col relative">
-          {/* 1. Header */}
           <header className="w-full container mx-auto px-6 md:px-12 pt-6 md:pt-8 flex justify-between items-center z-50">
             <div className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow">
               ARASAKA<span className="text-white">_LABS</span>
             </div>
-            <div className="font-mono text-[10px] md:text-xs text-cyber-blue border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md">
-              SYS: NORMAL
+
+            <div className="flex items-center gap-4">
+              <div className="hidden md:block font-mono text-[10px] md:text-xs text-cyber-blue border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md">
+                SYS: NORMAL
+              </div>
+
+              {/* NÚT BẬT/TẮT NHẠC */}
+              <button
+                onClick={toggleAudio}
+                // SỬA: Đổi gap-1.5 thành gap-1 để các phần tử sát rạt vào nhau
+                className={`
+                    flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 group
+                    ${
+                      !isMuted
+                        ? "border-cyber-pink text-cyber-pink bg-cyber-pink/10 shadow-[0_0_10px_rgba(255,0,60,0.3)]"
+                        : "border-gray-600 text-gray-500 hover:border-white hover:text-white"
+                    }
+                  `}
+              >
+                {!isMuted ? (
+                  <>
+                    {/* Khối Icon + Sóng nhạc */}
+                    <div className="flex items-center gap-1">
+                      <Volume2 size={14} />
+                      <div className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 bg-cyber-pink animate-[bounce_0.5s_infinite]" />
+                        <span className="w-0.5 bg-cyber-pink animate-[bounce_0.7s_infinite]" />
+                        <span className="w-0.5 bg-cyber-pink animate-[bounce_0.6s_infinite]" />
+                      </div>
+                    </div>
+
+                    {/* Chữ BGM: ON - Nằm ngay sát khối icon */}
+                    <span className="font-mono text-[10px] font-bold">
+                      BGM: ON
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX size={14} />
+                    <span className="font-mono text-[10px]">BGM: OFF</span>
+                  </>
+                )}
+              </button>
             </div>
           </header>
 
-          {/* 2. Main Content (Căn giữa hoàn hảo) */}
           <main className="flex-1 flex items-center container mx-auto px-6 md:px-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-              {/* Text Content */}
               <motion.div
                 style={{ y: yText, opacity: opacityText }}
                 className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -76,7 +145,7 @@ function App() {
                   onMouseEnter={playHover}
                 >
                   <CyberButton variant="yellow" onClick={handleEnterSystem}>
-                    ENTER MARKET
+                    ENTER SYSTEM
                   </CyberButton>
                   <CyberButton variant="blue" onClick={handleViewStatus}>
                     VIEW STATUS
@@ -84,12 +153,10 @@ function App() {
                 </div>
               </motion.div>
 
-              {/* Khoảng trống cho 3D Model bên phải */}
               <div className="hidden lg:block lg:col-span-5 h-full min-h-[300px]"></div>
             </div>
           </main>
 
-          {/* 3. Scroll Down Indicator (Mũi tên chỉ xuống) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 10, 0] }}
@@ -104,21 +171,15 @@ function App() {
           </motion.div>
         </section>
 
-        {/* --- TRANG 2: INFO SECTION (FULL SCREEN) --- */}
         <InfoSection />
-
-        {/* --- TRANG 3: ARSENAL SECTION --- */}
         <ArsenalSection />
 
-        {/* Footer */}
         <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
           <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
         </footer>
       </div>
 
-      {/* Bottom Line Decoration (Fixed) */}
       <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
-
       <AIChat />
     </div>
   );
