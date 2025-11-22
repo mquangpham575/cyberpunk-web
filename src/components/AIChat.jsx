@@ -19,55 +19,42 @@ const AIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- LOGIC TRẢ LỜI ĐƯỢC NÂNG CẤP ---
+  // --- LOGIC TRẢ LỜI ĐÃ ĐƯỢC TỐI GIẢN ---
   const generateResponse = (text) => {
     const lowerText = text.toLowerCase().trim();
 
-    // 1. KIỂM TRA TOÁN HỌC (Cộng Trừ Nhân Chia)
-    // Regex cho phép: số, khoảng trắng, và các dấu +, -, *, /, (, ), .
+    // 1. KIỂM TRA TOÁN HỌC (Giữ nguyên logic tính toán)
     const mathChars = /^[\d\s\+\-\*\/\(\)\.]+$/;
     // Phải có ít nhất 1 toán tử để tránh nhận nhầm năm "2077" là phép tính
     const hasOperator = /[\+\-\*\/]/.test(lowerText);
 
     if (hasOperator && mathChars.test(lowerText)) {
       try {
-        // Sử dụng 'new Function' an toàn hơn 'eval' để tính toán chuỗi string
-        // Ví dụ: "10 + 5" -> return 15
+        // Sử dụng 'new Function' an toàn hơn 'eval'
         const result = new Function("return " + lowerText)();
 
-        // Kiểm tra nếu kết quả hợp lệ (không phải NaN hay Infinity)
         if (Number.isFinite(result)) {
-          // Làm tròn tối đa 2 chữ số thập phân nếu cần
           const formattedResult = Number.isInteger(result)
             ? result
             : result.toFixed(2);
           return `>>> ĐANG XỬ LÝ DỮ LIỆU SỐ...\n>>> PHÉP TÍNH: [ ${lowerText} ]\n>>> KẾT QUẢ: ${formattedResult}`;
         }
       } catch (error) {
-        // Nếu lỗi cú pháp toán học, bỏ qua và chạy xuống logic hội thoại bên dưới
+        // Lỗi cú pháp toán học -> bỏ qua
       }
     }
 
-    // 2. HỘI THOẠI THÔNG THƯỜNG (Giữ nguyên cũ)
-    if (lowerText.includes("xin chào") || lowerText.includes("hi"))
+    // 2. HỘI THOẠI: CHỈ GIỮ LẠI CHÀO HỎI
+    if (
+      lowerText.includes("xin chào") ||
+      lowerText.includes("hi") ||
+      lowerText.includes("hello")
+    ) {
       return "Chào Netrunner. Hệ thống đang trực tuyến.";
-    if (lowerText.includes("giá") || lowerText.includes("tiền"))
-      return "Giá cả tại Chợ Đen biến động theo giây. Vui lòng kiểm tra mục Black Market.";
-    if (lowerText.includes("hack") || lowerText.includes("nhập"))
-      return "CẢNH BÁO: Truy cập trái phép sẽ kích hoạt giao thức ICE của NetWatch.";
-    if (lowerText.includes("mua") || lowerText.includes("order"))
-      return "Vui lòng chọn vật phẩm trong danh sách và nhấn PURCHASE. Giao dịch ẩn danh.";
-    if (lowerText.includes("là ai") || lowerText.includes("bạn là ai"))
-      return "Tôi là construct AI cấp 4, mã danh: V.A.L.";
+    }
 
-    // Câu trả lời mặc định
-    const defaults = [
-      "Dữ liệu bị mã hóa. Không thể giải mã.",
-      "Yêu cầu không hợp lệ. Vui lòng thử lại cú pháp chuẩn.",
-      "Đang quét mạng thần kinh... Không tìm thấy kết quả.",
-      "Hệ thống Arasaka từ chối truy cập thông tin này.",
-    ];
-    return defaults[Math.floor(Math.random() * defaults.length)];
+    // 3. MẶC ĐỊNH (Khi không phải toán hay chào hỏi)
+    return "Lệnh không xác định. Vui lòng nhập phép tính hoặc lời chào.";
   };
 
   const handleSend = (e) => {
@@ -86,7 +73,7 @@ const AIChat = () => {
         { id: Date.now() + 1, text: botResponse, sender: "bot" },
       ]);
       setIsTyping(false);
-    }, 1000); // Giảm thời gian chờ xuống 1s cho nhanh
+    }, 1000);
   };
 
   return (

@@ -239,8 +239,9 @@ function App() {
                 </div>
 
                 <p className="text-gray-400 text-base md:text-lg max-w-lg font-sans border-l-2 border-cyber-blue pl-4 leading-relaxed backdrop-blur-sm bg-black/20 p-2 rounded-r-lg">
-                  Trải nghiệm không gian số thế hệ mới. Giao diện được tối ưu
-                  hóa cho độ phân giải cao, sử dụng công nghệ WebGL thuần khiết.
+                  Truy cập kho dữ liệu nguyên mẫu cấp S. Cung cấp vũ khí thực
+                  nghiệm và Cyberware thế hệ mới. Chỉ dành cho nhân sự được ủy
+                  quyền hoặc lính đánh thuê cao cấp.
                 </p>
 
                 <div
