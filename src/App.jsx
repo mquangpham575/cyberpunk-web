@@ -26,22 +26,20 @@ import BackToTop from "./components/BackToTop";
 // =========================================
 
 /**
- * Cart Management Hook
- * Cập nhật thêm: trả về 'lastUpdate' để báo hiệu cho UI
+ * Manages cart state and provides a timestamp trigger for UI updates.
  */
 const useCart = () => {
   const [cart, setCart] = useState([]);
-  // Biến này dùng để kích hoạt hiển thị Header khi có thay đổi
-  const [lastUpdate, setLastUpdate] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState(0); // Timestamp to force UI refresh (e.g., show header)
 
   const addToCart = (item) => {
     setCart((prev) => [...prev, item]);
-    setLastUpdate(Date.now()); // Cập nhật timestamp mỗi khi thêm
+    setLastUpdate(Date.now());
   };
 
   const removeFromCart = (indexToRemove) => {
     setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
-    setLastUpdate(Date.now()); // Cập nhật cả khi xóa (để user thấy số lượng giảm)
+    setLastUpdate(Date.now());
   };
 
   const total = useMemo(() => {
@@ -56,7 +54,7 @@ const useCart = () => {
 };
 
 /**
- * Audio Management Hook
+ * Manages background audio playback and mute state.
  */
 const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
@@ -89,7 +87,7 @@ const useAudio = (src) => {
 };
 
 // =========================================
-// COMPONENT: HEADER (SMART SCROLL)
+// SMART HEADER COMPONENT
 // =========================================
 
 const Header = ({
@@ -98,12 +96,12 @@ const Header = ({
   total,
   isMuted,
   toggleAudio,
-  lastUpdate, // Nhận prop mới
+  lastUpdate,
 }) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
 
-  // 1. Logic Scroll: Ẩn khi xuống, Hiện khi lên
+  // 1. Scroll Logic: Hide on scroll down, show on scroll up
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious();
     if (latest > previous && latest > 150) {
@@ -113,7 +111,7 @@ const Header = ({
     }
   });
 
-  // 2. Logic Cart Update: Luôn hiện Header khi giỏ hàng thay đổi
+  // 2. Cart Logic: Force show header when cart updates
   useEffect(() => {
     if (lastUpdate > 0) {
       setHidden(false);
@@ -260,12 +258,11 @@ const Header = ({
 };
 
 // =========================================
-// MAIN APP COMPONENT
+// MAIN LAYOUT
 // =========================================
 
 function App() {
   const { scrollY } = useScroll();
-  // Lấy thêm lastUpdate từ hook
   const { cart, addToCart, removeFromCart, total, lastUpdate } = useCart();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
@@ -282,7 +279,7 @@ function App() {
 
       <div className="relative z-10 flex flex-col">
         <section className="h-screen flex flex-col relative">
-          {/* Truyền lastUpdate vào Header */}
+          {/* Pass lastUpdate to trigger header appearance */}
           <Header
             cart={cart}
             removeFromCart={removeFromCart}
