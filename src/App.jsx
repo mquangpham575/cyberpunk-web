@@ -6,6 +6,7 @@ import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
 import ArsenalSection from "./components/ArsenalSection";
 import AIChat from "./components/AIChat";
+import BackToTop from "./components/BackToTop";
 
 function App() {
   const { scrollY } = useScroll();
@@ -181,6 +182,7 @@ function App() {
 
       <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
       <AIChat />
+      <BackToTop />
     </div>
   );
 }
