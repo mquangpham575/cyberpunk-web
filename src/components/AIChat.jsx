@@ -2,75 +2,89 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Cpu, Terminal } from "lucide-react";
 
+// --- CONFIGURATION & UTILS ---
+
+const INITIAL_MESSAGE = {
+  id: 1,
+  text: "Kết nối an toàn. Tôi là AI hỗ trợ Arasaka. Bạn cần tìm thông tin gì?",
+  sender: "bot",
+};
+
+const CHAT_VARIANTS = {
+  hidden: { opacity: 0, y: 50, scale: 0.9 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: 50, scale: 0.9 },
+};
+
+/**
+ * Processes user input to generate a bot response.
+ * Handles basic math and greetings.
+ */
+const getBotResponse = (input) => {
+  const text = input.toLowerCase().trim();
+
+  // 1. MATH PROTOCOL: Strict whitelist regex for security
+  const mathRegex = /^[\d\s\+\-\*\/\(\)\.]+$/;
+  const hasOperator = /[\+\-\*\/]/.test(text);
+
+  if (hasOperator && mathRegex.test(text)) {
+    try {
+      // Function constructor is safer than eval() when input is sanitized
+      // eslint-disable-next-line no-new-func
+      const result = new Function("return " + text)();
+
+      if (Number.isFinite(result)) {
+        const formatted = Number.isInteger(result) ? result : result.toFixed(2);
+        return `>>> ĐANG XỬ LÝ DỮ LIỆU SỐ...\n>>> PHÉP TÍNH: [ ${text} ]\n>>> KẾT QUẢ: ${formatted}`;
+      }
+    } catch (e) {
+      // Ignore syntax errors
+    }
+  }
+
+  // 2. CONVERSATION PROTOCOL
+  if (["xin chào", "hi", "hello"].some((greeting) => text.includes(greeting))) {
+    return "Chào Netrunner. Hệ thống đang trực tuyến.";
+  }
+
+  // 3. FALLBACK
+  return "Lệnh không xác định. Vui lòng nhập phép tính hoặc lời chào.";
+};
+
+// --- MAIN COMPONENT ---
+
 const AIChat = () => {
+  // State
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Kết nối an toàn. Tôi là AI hỗ trợ Arasaka. Bạn cần tìm thông tin gì?",
-      sender: "bot",
-    },
-  ]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
+
+  // Refs
   const messagesEndRef = useRef(null);
 
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // --- LOGIC TRẢ LỜI ĐÃ ĐƯỢC TỐI GIẢN ---
-  const generateResponse = (text) => {
-    const lowerText = text.toLowerCase().trim();
-
-    // 1. KIỂM TRA TOÁN HỌC (Giữ nguyên logic tính toán)
-    const mathChars = /^[\d\s\+\-\*\/\(\)\.]+$/;
-    // Phải có ít nhất 1 toán tử để tránh nhận nhầm năm "2077" là phép tính
-    const hasOperator = /[\+\-\*\/]/.test(lowerText);
-
-    if (hasOperator && mathChars.test(lowerText)) {
-      try {
-        // Sử dụng 'new Function' an toàn hơn 'eval'
-        const result = new Function("return " + lowerText)();
-
-        if (Number.isFinite(result)) {
-          const formattedResult = Number.isInteger(result)
-            ? result
-            : result.toFixed(2);
-          return `>>> ĐANG XỬ LÝ DỮ LIỆU SỐ...\n>>> PHÉP TÍNH: [ ${lowerText} ]\n>>> KẾT QUẢ: ${formattedResult}`;
-        }
-      } catch (error) {
-        // Lỗi cú pháp toán học -> bỏ qua
-      }
-    }
-
-    // 2. HỘI THOẠI: CHỈ GIỮ LẠI CHÀO HỎI
-    if (
-      lowerText.includes("xin chào") ||
-      lowerText.includes("hi") ||
-      lowerText.includes("hello")
-    ) {
-      return "Chào Netrunner. Hệ thống đang trực tuyến.";
-    }
-
-    // 3. MẶC ĐỊNH (Khi không phải toán hay chào hỏi)
-    return "Lệnh không xác định. Vui lòng nhập phép tính hoặc lời chào.";
-  };
+  }, [messages, isTyping]);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     const userMsg = { id: Date.now(), text: input, sender: "user" };
+
+    // Optimistic UI update
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
+    // Simulate Network Delay
     setTimeout(() => {
-      const botResponse = generateResponse(userMsg.text);
+      const responseText = getBotResponse(userMsg.text);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, text: botResponse, sender: "bot" },
+        { id: Date.now() + 1, text: responseText, sender: "bot" },
       ]);
       setIsTyping(false);
     }, 1000);
@@ -81,12 +95,13 @@ const AIChat = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="mb-4 w-80 md:w-96 bg-black/80 backdrop-blur-xl border border-cyber-blue shadow-[0_0_20px_rgba(0,240,255,0.2)] overflow-hidden rounded-sm"
+            variants={CHAT_VARIANTS}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="mb-4 w-80 md:w-96 bg-black/80 backdrop-blur-xl border border-cyber-blue shadow-[0_0_20px_rgba(0,240,255,0.2)] overflow-hidden rounded-sm flex flex-col"
           >
-            {/* Header */}
+            {/* --- CHAT HEADER --- */}
             <div className="bg-cyber-blue/10 p-3 border-b border-cyber-blue flex justify-between items-center">
               <div className="flex items-center gap-2 text-cyber-blue">
                 <Cpu size={16} className="animate-pulse" />
@@ -102,8 +117,8 @@ const AIChat = () => {
               </button>
             </div>
 
-            {/* Message List */}
-            <div className="h-80 overflow-y-auto p-4 space-y-4 bg-grid-pattern">
+            {/* --- MESSAGE LIST --- */}
+            <div className="h-80 overflow-y-auto p-4 space-y-4 bg-grid-pattern custom-scrollbar">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -121,6 +136,7 @@ const AIChat = () => {
                     }
                   `}
                   >
+                    {/* Decorative Corner triangle */}
                     <div
                       className={`absolute top-0 w-2 h-2 ${
                         msg.sender === "user"
@@ -129,6 +145,7 @@ const AIChat = () => {
                       }`}
                     />
 
+                    {/* Bot Label */}
                     {msg.sender === "bot" && (
                       <span className="block text-[10px] opacity-50 mb-1 text-cyber-pink">
                         SYSTEM &gt;&gt;
@@ -139,28 +156,24 @@ const AIChat = () => {
                 </div>
               ))}
 
+              {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-gray-900 border border-cyber-blue/30 p-3 rounded-tr-lg rounded-br-lg rounded-bl-lg flex gap-1 items-center">
-                    <span
-                      className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce"
-                      style={{ animationDelay: "0s" }}
-                    />
-                    <span
-                      className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    />
-                    <span
-                      className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce"
-                      style={{ animationDelay: "0.4s" }}
-                    />
+                    {[0, 0.2, 0.4].map((delay) => (
+                      <span
+                        key={delay}
+                        className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce"
+                        style={{ animationDelay: `${delay}s` }}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
+            {/* --- INPUT AREA --- */}
             <form
               onSubmit={handleSend}
               className="p-3 bg-black border-t border-white/10 flex gap-2"
@@ -180,8 +193,8 @@ const AIChat = () => {
               </div>
               <button
                 type="submit"
-                className="bg-cyber-blue text-black p-2 hover:bg-white transition-colors disabled:opacity-50"
                 disabled={!input.trim()}
+                className="bg-cyber-blue text-black p-2 hover:bg-white transition-colors disabled:opacity-50"
               >
                 <Send size={16} />
               </button>
@@ -190,6 +203,7 @@ const AIChat = () => {
         )}
       </AnimatePresence>
 
+      {/* --- TOGGLE BUTTON --- */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -198,8 +212,9 @@ const AIChat = () => {
       >
         <div className="absolute inset-0 rounded-full border border-dashed border-black/30 animate-[spin_10s_linear_infinite]" />
         {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+
         {!isOpen && (
-          <span className="absolute right-full mr-4 bg-black text-cyber-blue text-xs px-2 py-1 border border-cyber-blue whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="absolute right-full mr-4 bg-black text-cyber-blue text-xs px-2 py-1 border border-cyber-blue whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             NEED HELP?
           </span>
         )}
