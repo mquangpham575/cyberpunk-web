@@ -92,7 +92,7 @@ const BackToTop = () => {
                 className="text-cyber-blue group-hover:animate-bounce"
               />
               {/* Vertical Percentage Text */}
-              <span className="text-[8px] font-mono text-cyber-blue/70 writing-vertical-lr rotate-180 mt-1 select-none">
+              <span className="text-[8px] font-mono text-cyber-blue/70 writing-vertical-rl mt-1 select-none">
                 {Math.round(progress)}%
               </span>
             </div>
