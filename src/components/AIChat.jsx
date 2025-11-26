@@ -239,7 +239,7 @@ const AIChat = () => {
 
                     {msg.sender === "bot" &&
                       (msg.text.includes("LỖI") || msg.text.includes("LOST") ? (
-                        <span className="block text-[10px] opacity-80 mb-1 text-red-500 font-bold flex items-center gap-1">
+                        <span className="block text-[10px] opacity-80 mb-1 text-red-500 font-bold items-center gap-1">
                           <AlertTriangle size={8} /> CRITICAL_ERROR &gt;&gt;
                         </span>
                       ) : (
