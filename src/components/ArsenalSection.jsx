@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Check } from "lucide-react";
 
-// Import Data từ file riêng
+// Import Data
 import { INVENTORY_DATA } from "../data/inventoryData";
 
 // --- CONFIGURATION ---
