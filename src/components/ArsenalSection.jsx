@@ -1,21 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Zap,
-  Shield,
-  Crosshair,
-  Cpu,
-  Eye,
-  Activity,
-  Skull,
-  Flame,
-  Radio,
-  Search,
-  X,
-  Check,
-} from "lucide-react";
+import { Search, X, Check } from "lucide-react";
 
-// --- CONFIGURATION & DATA ---
+// Import Data từ file riêng
+import { INVENTORY_DATA } from "../data/inventoryData";
+
+// --- CONFIGURATION ---
 
 const RARITY_CONFIG = {
   legendary: {
@@ -48,129 +38,6 @@ const ANIMATIONS = {
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
   },
 };
-
-const INVENTORY_DATA = [
-  {
-    id: 1,
-    name: "MALORIAN_ARMS_3516",
-    category: "WEAPONS",
-    rarity: "legendary",
-    price: "???",
-    icon: Flame,
-    status: "pre_order",
-    desc: "Johnny Silverhand's personal sidearm. Devastating firepower.",
-  },
-  {
-    id: 2,
-    name: "GUTS_SHOTGUN",
-    category: "WEAPONS",
-    rarity: "epic",
-    price: "25,000",
-    icon: Skull,
-    status: "available",
-    desc: "Rebecca's heavy shotgun. Massive recoil control required.",
-  },
-  {
-    id: 3,
-    name: "MONOWIRE",
-    category: "WEAPONS",
-    rarity: "legendary",
-    price: "32,000",
-    icon: Activity,
-    status: "available",
-    desc: "Monomolecular whip. Silent slices through organic matter.",
-  },
-  {
-    id: 4,
-    name: "ERATA_KATANA",
-    category: "WEAPONS",
-    rarity: "epic",
-    price: "18,500",
-    icon: Crosshair,
-    status: "available",
-    desc: "Thermal Katana. Inflicts burning status on impact.",
-  },
-  {
-    id: 5,
-    name: "PROJECTILE_LAUNCHER",
-    category: "WEAPONS",
-    rarity: "rare",
-    price: "15,000",
-    icon: Crosshair,
-    status: "sold_out",
-    desc: "Wrist-mounted grenade launcher. Out of stock due to embargo.",
-  },
-  {
-    id: 6,
-    name: "SKI_PPY",
-    category: "WEAPONS",
-    rarity: "epic",
-    price: "50,000",
-    icon: Radio,
-    status: "sold_out",
-    desc: "Smart pistol with AI. (Note: AI is extremely talkative).",
-  },
-  {
-    id: 7,
-    name: "SANDY_MK5_WARP",
-    category: "CYBERWARE",
-    rarity: "legendary",
-    price: "85,000",
-    icon: Zap,
-    status: "pre_order",
-    desc: "Experimental Sandevistan. Slows time by 90%.",
-  },
-  {
-    id: 8,
-    name: "GORILLA_ARMS",
-    category: "CYBERWARE",
-    rarity: "epic",
-    price: "12,500",
-    icon: Activity,
-    status: "available",
-    desc: "Enhances melee strength and door-breaching capabilities.",
-  },
-  {
-    id: 9,
-    name: "KIROSHI_OPTICS_V3",
-    category: "CYBERWARE",
-    rarity: "rare",
-    price: "5,200",
-    icon: Eye,
-    status: "available",
-    desc: "Enemy scanning, wall-penetrating vision, 10x zoom.",
-  },
-  {
-    id: 10,
-    name: "SUBDERMAL_ARMOR",
-    category: "CYBERWARE",
-    rarity: "rare",
-    price: "4,000",
-    icon: Shield,
-    status: "available",
-    desc: "Subcutaneous plating. Increases Armor rating by 200.",
-  },
-  {
-    id: 11,
-    name: "NETWATCH_DRIVER",
-    category: "CYBERWARE",
-    rarity: "legendary",
-    price: "45,000",
-    icon: Cpu,
-    status: "available",
-    desc: "60% faster upload speed. Auto-spreads combat quickhacks.",
-  },
-  {
-    id: 12,
-    name: "TITANIUM_BONES",
-    category: "CYBERWARE",
-    rarity: "rare",
-    price: "3,000",
-    icon: Shield,
-    status: "sold_out",
-    desc: "Increases carry capacity by 60%.",
-  },
-];
 
 // --- SUB-COMPONENTS ---
 
@@ -209,7 +76,7 @@ const SearchBar = ({ value, onChange, onClear }) => (
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="SEARCH PROTOCOL..."
+      placeholder="TÌM KIẾM DỮ LIỆU..."
       className="w-full bg-black/50 border border-white/20 py-2.5 pl-10 pr-8 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue transition-colors uppercase placeholder:text-gray-700 relative z-10"
     />
 
@@ -248,6 +115,19 @@ const ItemCard = ({ item, addToCart }) => {
     ? "opacity-50 grayscale pointer-events-none"
     : "opacity-100";
 
+  // Hàm render trạng thái nút mua
+  const renderButtonContent = () => {
+    if (isSoldOut) return "HẾT HÀNG";
+    if (isAdded)
+      return (
+        <>
+          <Check size={14} /> ĐÃ THÊM
+        </>
+      );
+    if (isPreOrder) return "ĐẶT TRƯỚC";
+    return "MUA NGAY";
+  };
+
   return (
     <motion.div
       variants={ANIMATIONS.item}
@@ -267,12 +147,12 @@ const ItemCard = ({ item, addToCart }) => {
           </span>
           {isSoldOut && (
             <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-1">
-              OUT_OF_STOCK
+              HẾT HÀNG
             </span>
           )}
           {isPreOrder && (
             <span className="text-[10px] font-bold text-cyber-yellow bg-cyber-yellow/10 px-1 animate-pulse">
-              PRE_ORDER
+              ĐẶT TRƯỚC
             </span>
           )}
         </div>
@@ -281,12 +161,12 @@ const ItemCard = ({ item, addToCart }) => {
       {/* Card Body: Info */}
       <div>
         <h3 className="font-display text-2xl text-white mb-2 group-hover:text-cyber-blue transition-colors wrap-break-word leading-none min-h-12 flex items-end">
-          {item.name.replace(/_/g, " ")}
+          {item.name}
         </h3>
         <span
           className={`text-[10px] font-bold uppercase tracking-widest ${theme.color}`}
         >
-          // {item.rarity} CLASS
+          // CẤP ĐỘ {item.rarity}
         </span>
         <p className="mt-3 text-xs text-gray-400 font-mono leading-relaxed h-10 line-clamp-2">
           {item.desc}
@@ -314,17 +194,7 @@ const ItemCard = ({ item, addToCart }) => {
         `}
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
-          {isSoldOut ? (
-            "UNAVAILABLE"
-          ) : isAdded ? (
-            <>
-              <Check size={14} /> ADDED
-            </>
-          ) : isPreOrder ? (
-            "RESERVE NOW"
-          ) : (
-            "PURCHASE"
-          )}
+          {renderButtonContent()}
         </span>
 
         {/* Fill Animation */}
@@ -337,7 +207,7 @@ const ItemCard = ({ item, addToCart }) => {
         )}
       </button>
 
-      {/* Decorative Corner Triangle (changes color on hover) */}
+      {/* Decorative Corner Triangle */}
       {!isSoldOut && (
         <div
           className={`
@@ -358,6 +228,13 @@ const ItemCard = ({ item, addToCart }) => {
 const ArsenalSection = ({ addToCart }) => {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Map key filter sang tiếng Việt để hiển thị
+  const FILTER_LABELS = {
+    ALL: "TẤT CẢ",
+    WEAPONS: "VŨ KHÍ",
+    CYBERWARE: "CYBERWARE",
+  };
 
   // Filter Logic
   const filteredItems = useMemo(() => {
@@ -380,11 +257,11 @@ const ArsenalSection = ({ addToCart }) => {
         <div className="flex flex-col xl:flex-row justify-between items-end mb-12 gap-8">
           <div className="w-full xl:w-auto">
             <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-2">
-              BLACK<span className="text-cyber-pink">_MARKET</span>
+              CHỢ<span className="text-cyber-pink"> ĐEN</span>
             </h2>
             <p className="text-gray-400 font-mono text-sm border-l-2 border-cyber-yellow pl-4 max-w-md">
-              The largest underground arsenal in Night City. No questions asked.
-              No refunds.
+              Kho vũ khí ngầm lớn nhất Night City. Không hỏi han. Không hoàn
+              tiền.
             </p>
           </div>
 
@@ -399,7 +276,7 @@ const ArsenalSection = ({ addToCart }) => {
               {["ALL", "WEAPONS", "CYBERWARE"].map((key) => (
                 <FilterButton
                   key={key}
-                  label={key}
+                  label={FILTER_LABELS[key]} // Hiển thị tên tiếng Việt
                   active={activeFilter === key}
                   onClick={() => setActiveFilter(key)}
                 />
@@ -412,7 +289,7 @@ const ArsenalSection = ({ addToCart }) => {
         <AnimatePresence mode="wait">
           {filteredItems.length > 0 ? (
             <motion.div
-              key={activeFilter + searchQuery} // Triggers re-animation on filter change
+              key={activeFilter + searchQuery} // Triggers re-animation
               variants={ANIMATIONS.container}
               initial="hidden"
               animate="show"
@@ -429,7 +306,7 @@ const ArsenalSection = ({ addToCart }) => {
               className="w-full py-20 text-center border border-dashed border-white/10 bg-black/20"
             >
               <p className="text-cyber-pink font-mono text-sm animate-pulse">
-                &gt;&gt; NO_DATA_FOUND: 0 RESULTS MATCHING "
+                &gt;&gt; LỖI: KHÔNG TÌM THẤY DỮ LIỆU KHỚP VỚI "
                 {searchQuery.toUpperCase()}"
               </p>
             </motion.div>

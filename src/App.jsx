@@ -13,8 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-// --- LOCAL COMPONENTS ---
-import OptimizedScene from "./components/OptimizedScene";
+import Scene3D from "./components/Scene3D.jsx";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
 import ArsenalSection from "./components/ArsenalSection";
@@ -25,12 +24,10 @@ import BackToTop from "./components/BackToTop";
 // CUSTOM HOOKS
 // =========================================
 
-/**
- * Manages cart state and provides a timestamp trigger for UI updates.
- */
+// Manages cart state and memoizes total price calculation
 const useCart = () => {
   const [cart, setCart] = useState([]);
-  const [lastUpdate, setLastUpdate] = useState(0); // Timestamp to force UI refresh (e.g., show header)
+  const [lastUpdate, setLastUpdate] = useState(0);
 
   const addToCart = (item) => {
     setCart((prev) => [...prev, item]);
@@ -42,6 +39,7 @@ const useCart = () => {
     setLastUpdate(Date.now());
   };
 
+  // Calculate total price, handling currency formatting (e.g., "1,000")
   const total = useMemo(() => {
     return cart.reduce((acc, item) => {
       if (item.price === "???") return acc;
@@ -53,9 +51,7 @@ const useCart = () => {
   return { cart, addToCart, removeFromCart, total, lastUpdate };
 };
 
-/**
- * Manages background audio playback and mute state.
- */
+// Handles background music playback and mute toggling
 const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
@@ -87,7 +83,7 @@ const useAudio = (src) => {
 };
 
 // =========================================
-// SMART HEADER COMPONENT
+// COMPONENT: SMART HEADER
 // =========================================
 
 const Header = ({
@@ -101,7 +97,7 @@ const Header = ({
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
 
-  // 1. Scroll Logic: Hide on scroll down, show on scroll up
+  // Auto-hide header on scroll down, show on scroll up
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious();
     if (latest > previous && latest > 150) {
@@ -111,7 +107,7 @@ const Header = ({
     }
   });
 
-  // 2. Cart Logic: Force show header when cart updates
+  // Force header visibility when cart actions occur
   useEffect(() => {
     if (lastUpdate > 0) {
       setHidden(false);
@@ -129,13 +125,13 @@ const Header = ({
       className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
     >
       <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
-        {/* BRANDING */}
+        {/* Brand Logo */}
         <div className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow cursor-pointer select-none drop-shadow-[0_0_10px_rgba(252,232,0,0.5)]">
           ARASAKA<span className="text-white">_LABS</span>
         </div>
 
         <div className="flex items-center gap-4">
-          {/* CART SYSTEM */}
+          {/* Cart Dropdown System */}
           <div className="group relative">
             <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
               <span className="font-mono text-[10px] md:text-xs text-cyber-blue">
@@ -150,7 +146,7 @@ const Header = ({
               )}
             </div>
 
-            {/* Dropdown Menu */}
+            {/* Hover Dropdown */}
             <div className="absolute right-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
               <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
               <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
@@ -219,7 +215,7 @@ const Header = ({
             </div>
           </div>
 
-          {/* AUDIO CONTROLS */}
+          {/* Audio Toggle Button */}
           <button
             onClick={toggleAudio}
             className={`flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 bg-black/50 backdrop-blur-md ${
@@ -230,13 +226,19 @@ const Header = ({
           >
             {!isMuted ? (
               <>
-                <div className="flex items-center gap-1">
-                  <Volume2 size={14} />
-                  <div className="flex gap-0.5 items-end h-3">
-                    <span className="w-0.5 bg-cyber-pink animate-[bounce_0.5s_infinite]" />
-                    <span className="w-0.5 bg-cyber-pink animate-[bounce_0.7s_infinite]" />
-                    <span className="w-0.5 bg-cyber-pink animate-[bounce_0.6s_infinite]" />
-                  </div>
+                <div className="flex gap-0.5 items-end h-3">
+                  <span
+                    className="w-0.5 h-1.5 bg-cyber-pink animate-bounce"
+                    style={{ animationDuration: "0.4s" }}
+                  />
+                  <span
+                    className="w-0.5 h-3 bg-cyber-pink animate-bounce"
+                    style={{ animationDuration: "0.6s" }}
+                  />
+                  <span
+                    className="w-0.5 h-2 bg-cyber-pink animate-bounce"
+                    style={{ animationDuration: "0.5s" }}
+                  />
                 </div>
                 <span className="font-mono text-[10px] font-bold hidden sm:inline">
                   BGM: ON
@@ -258,7 +260,7 @@ const Header = ({
 };
 
 // =========================================
-// MAIN LAYOUT
+// MAIN APP LAYOUT
 // =========================================
 
 function App() {
@@ -266,6 +268,7 @@ function App() {
   const { cart, addToCart, removeFromCart, total, lastUpdate } = useCart();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
+  // Parallax effects for Hero section
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
@@ -275,11 +278,12 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      <OptimizedScene scrollY={scrollY} />
+      {/* Background 3D Scene */}
+      <Scene3D scrollY={scrollY} />
 
+      {/* Main Content Layer */}
       <div className="relative z-10 flex flex-col">
         <section className="h-screen flex flex-col relative">
-          {/* Pass lastUpdate to trigger header appearance */}
           <Header
             cart={cart}
             removeFromCart={removeFromCart}
@@ -291,6 +295,7 @@ function App() {
 
           <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
+              {/* Hero Text Content */}
               <motion.div
                 style={{ y: yText, opacity: opacityText }}
                 className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -331,6 +336,7 @@ function App() {
             </div>
           </main>
 
+          {/* Scroll Down Indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 10, 0] }}
@@ -345,6 +351,7 @@ function App() {
           </motion.div>
         </section>
 
+        {/* Content Sections */}
         <InfoSection />
         <ArsenalSection addToCart={addToCart} />
 
@@ -353,6 +360,7 @@ function App() {
         </footer>
       </div>
 
+      {/* Floating UI Elements */}
       <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
       <AIChat />
       <BackToTop />
