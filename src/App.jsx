@@ -14,6 +14,7 @@ import {
   Trash2,
   User,
   LogOut,
+  Crosshair, // Đã thêm import icon này
 } from "lucide-react";
 
 // Firebase Services
@@ -21,6 +22,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "./services/firebase.js";
 import AuthModal from "./components/AuthModal";
+import ShadowOperations from "./components/ShadowOperations";
 
 // Component Imports
 import Scene3D from "./components/Scene3D.jsx";
@@ -166,6 +168,7 @@ const Header = ({
   user,
   onOpenAuth,
   onLogout,
+  onOpenMissions,
 }) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -196,6 +199,15 @@ const Header = ({
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Missions Button */}
+          <button
+            onClick={onOpenMissions}
+            className="hidden md:flex items-center gap-2 text-cyber-yellow hover:text-white transition-colors font-mono text-xs tracking-widest border border-cyber-yellow/30 px-3 py-1 bg-cyber-yellow/5 hover:bg-cyber-yellow/20"
+          >
+            <Crosshair size={14} />
+            CONTRACTS
+          </button>
+
           {/* User Status / Login */}
           {user ? (
             <div className="hidden md:flex items-center gap-2 px-3 py-1 border border-green-500/50 bg-green-500/10 backdrop-blur-md transition-colors">
@@ -358,7 +370,7 @@ function App() {
   const { scrollY } = useScroll();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
-  const [currentView, setCurrentView] = useState("home");
+  const [currentView, setCurrentView] = useState("home"); // home, checkout, missions
 
   // Auth State
   const [user, setUser] = useState(null);
@@ -396,10 +408,12 @@ function App() {
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
       <Scene3D scrollY={scrollY} />
 
+      {/* Authentication Modal */}
       <AnimatePresence>
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       </AnimatePresence>
 
+      {/* Checkout Page View */}
       <AnimatePresence>
         {currentView === "checkout" && (
           <CheckoutPage
@@ -412,9 +426,17 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* Missions/Shadow Operations View */}
+      <AnimatePresence>
+        {currentView === "missions" && (
+          <ShadowOperations onBack={() => setCurrentView("home")} />
+        )}
+      </AnimatePresence>
+
+      {/* Main Content Layer */}
       <div
         className={`relative z-10 flex flex-col transition-opacity duration-500 ${
-          currentView === "checkout"
+          currentView !== "home"
             ? "opacity-0 pointer-events-none h-0 overflow-hidden"
             : "opacity-100"
         }`}
@@ -431,6 +453,7 @@ function App() {
             user={user}
             onOpenAuth={() => setShowAuthModal(true)}
             onLogout={handleLogout}
+            onOpenMissions={() => setCurrentView("missions")}
           />
 
           <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
@@ -480,7 +503,6 @@ function App() {
             animate={{ opacity: 1, y: [0, 10, 0] }}
             transition={{ delay: 1, duration: 2, repeat: Infinity }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer"
-            // Đã đổi ID target sang black-market vì section này giờ nằm trước
             onClick={() => handleScrollTo("black-market")}
           >
             <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70">
@@ -490,7 +512,6 @@ function App() {
           </motion.div>
         </section>
 
-        {/* Đã đảo vị trí: ArsenalSection (Market) lên trước InfoSection (Status) */}
         <ArsenalSection addToCart={addToCart} />
         <InfoSection />
 

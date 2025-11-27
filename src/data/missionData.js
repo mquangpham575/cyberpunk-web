@@ -1,0 +1,48 @@
+// src/data/missionData.js
+
+export const MISSION_DATA = [
+  {
+    id: "M-001",
+    title: "TRỘM DỮ LIỆU: Kiroshi Optics",
+    type: "Theft",
+    client: "Fixer Ẩn Danh",
+    risk: "High",
+    reward: 15000,
+    desc: "Xâm nhập máy chủ phụ của Kiroshi. Trích xuất bản thiết kế MK-IV. Yêu cầu không để lại nhân chứng hoặc dấu vết kỹ thuật số.",
+    location: "Westbrook, Japantown",
+    status: "available",
+  },
+  {
+    id: "M-002",
+    title: "HỘ TỐNG: Giải Cứu VIP",
+    type: "Protection",
+    client: "Militech Proxy",
+    risk: "Medium",
+    reward: 8500,
+    desc: "Hộ tống một nhà nghiên cứu đào tẩu từ Badlands về nội thành an toàn. Cảnh báo: Có sự hiện diện của băng đảng Wraiths.",
+    location: "Biên giới Badlands",
+    status: "available",
+  },
+  {
+    id: "M-003",
+    title: "PHÁ HOẠI: Mạng Lưới Petrochem",
+    type: "Sabotage",
+    client: "Nhóm Eco-Terrorists",
+    risk: "Low",
+    reward: 4000,
+    desc: "Cài virus vào trạm kiểm soát năng lượng khu công nghiệp. Mục tiêu là gây mất điện cục bộ để tạo điều kiện cho một hoạt động khác.",
+    location: "Northside, Watson",
+    status: "available",
+  },
+  {
+    id: "M-004",
+    title: "TRIỆT HẠ: Cyberpsycho",
+    type: "Assassination",
+    client: "NCPD Contractor",
+    risk: "Extreme",
+    reward: 25000,
+    desc: "Đối tượng trang bị Mantis Blades quân sự cấp cao. Đã mất kiểm soát hoàn toàn và gây thương vong lớn. Yêu cầu tiêu diệt ngay lập tức.",
+    location: "Bờ biển Pacifica",
+    status: "locked",
+  },
+];
