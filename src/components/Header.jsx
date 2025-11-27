@@ -99,15 +99,15 @@ const Header = ({
               <div className="p-4">
                 <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
                   <span className="text-cyber-blue font-mono text-xs">
-                    CART
+                    Giỏ hàng
                   </span>
                   <span className="text-white font-mono text-xs">
-                    Total: €$ {total.toLocaleString()}
+                    Tổng tiền: {total.toLocaleString()}$
                   </span>
                 </div>
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    [EMPTY]
+                    [Giỏ hàng trống]
                   </div>
                 ) : (
                   <>
@@ -142,7 +142,7 @@ const Header = ({
                       onClick={() => navigate("/checkout")}
                       className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase"
                     >
-                      CHECKOUT
+                      Thanh toán
                     </button>
                   </>
                 )}
