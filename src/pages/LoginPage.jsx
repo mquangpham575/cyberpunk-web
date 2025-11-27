@@ -165,9 +165,7 @@ const LoginPage = ({ setUser }) => {
             {isLogin ? "ĐĂNG NHẬP HỆ THỐNG" : "TẠO DANH TÍNH MỚI"}
           </h2>
           <p className="text-xs font-mono text-cyber-blue text-center mb-8 border-b border-cyber-blue/30 pb-4">
-            {isLogin
-              ? "XÁC THỰC ĐỂ TRUY CẬP MÁY CHỦ"
-              : "ĐĂNG KÝ CHỮ KÝ SỐ VÀO CƠ SỞ DỮ LIỆU"}
+            {isLogin ? "XÁC THỰC ĐỂ TRUY CẬP MÁY CHỦ" : ""}
           </p>
 
           {error && (
