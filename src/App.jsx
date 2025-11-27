@@ -4,6 +4,7 @@ import {
   useScroll,
   useTransform,
   useMotionValueEvent,
+  AnimatePresence,
 } from "framer-motion";
 import {
   ChevronDown,
@@ -11,20 +12,28 @@ import {
   VolumeX,
   ShoppingBag,
   Trash2,
+  User,
+  LogOut,
 } from "lucide-react";
 
+// --- FIREBASE IMPORTS ---
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./services/firebase.js";
+import AuthModal from "./components/AuthModal";
+
+// --- IMPORTS ---
 import Scene3D from "./components/Scene3D.jsx";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
 import ArsenalSection from "./components/ArsenalSection";
 import AIChat from "./components/AIChat";
 import BackToTop from "./components/BackToTop";
+import CheckoutPage from "./components/CheckoutPage";
 
 // =========================================
 // CUSTOM HOOKS
 // =========================================
 
-// Manages cart state and memoizes total price calculation
 const useCart = () => {
   const [cart, setCart] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(0);
@@ -39,7 +48,11 @@ const useCart = () => {
     setLastUpdate(Date.now());
   };
 
-  // Calculate total price, handling currency formatting (e.g., "1,000")
+  const clearCart = () => {
+    setCart([]);
+    setLastUpdate(Date.now());
+  };
+
   const total = useMemo(() => {
     return cart.reduce((acc, item) => {
       if (item.price === "???") return acc;
@@ -48,10 +61,9 @@ const useCart = () => {
     }, 0);
   }, [cart]);
 
-  return { cart, addToCart, removeFromCart, total, lastUpdate };
+  return { cart, addToCart, removeFromCart, clearCart, total, lastUpdate };
 };
 
-// Handles background music playback and mute toggling
 const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
@@ -67,7 +79,6 @@ const useAudio = (src) => {
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
-
     if (isMuted) {
       audioRef.current
         .play()
@@ -83,7 +94,7 @@ const useAudio = (src) => {
 };
 
 // =========================================
-// COMPONENT: SMART HEADER
+// HEADER (ĐÃ SỬA: BỎ SYS:NORMAL, GIỮ LOGIN)
 // =========================================
 
 const Header = ({
@@ -93,11 +104,14 @@ const Header = ({
   isMuted,
   toggleAudio,
   lastUpdate,
+  onCheckout,
+  user,
+  onOpenAuth,
+  onLogout,
 }) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
 
-  // Auto-hide header on scroll down, show on scroll up
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious();
     if (latest > previous && latest > 150) {
@@ -107,7 +121,6 @@ const Header = ({
     }
   });
 
-  // Force header visibility when cart actions occur
   useEffect(() => {
     if (lastUpdate > 0) {
       setHidden(false);
@@ -126,21 +139,46 @@ const Header = ({
     >
       <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
         {/* Brand Logo */}
-        <div className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow cursor-pointer select-none drop-shadow-[0_0_10px_rgba(252,232,0,0.5)]">
+        <div
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow cursor-pointer select-none drop-shadow-[0_0_10px_rgba(252,232,0,0.5)]"
+        >
           ARASAKA<span className="text-white">_LABS</span>
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Cart Dropdown System */}
-          <div className="group relative">
-            <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-2 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
-              <span className="font-mono text-[10px] md:text-xs text-cyber-blue">
-                SYS: NORMAL
+          {/* --- USER STATUS / LOGIN BUTTON --- */}
+          {user ? (
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 border border-green-500/50 bg-green-500/10 backdrop-blur-md transition-colors">
+              <User size={12} className="text-green-500" />
+              <span className="text-[10px] font-mono text-green-400 uppercase tracking-wider">
+                {user.displayName || "OPERATOR"}
               </span>
-              <div className="w-px h-3 bg-cyber-blue/50"></div>
+              <div className="w-px h-3 bg-green-500/30 mx-1"></div>
+              <button
+                onClick={onLogout}
+                className="text-gray-400 hover:text-red-500 transition-colors"
+                title="Disconnect"
+              >
+                <LogOut size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="hidden md:block px-4 py-1 border border-cyber-blue text-cyber-blue font-mono text-[10px] hover:bg-cyber-blue hover:text-black transition-colors uppercase tracking-widest"
+            >
+              // LOGIN
+            </button>
+          )}
+
+          {/* --- CART DROPDOWN SYSTEM (ĐÃ GỌN GÀNG) --- */}
+          <div className="group relative">
+            <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-3 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
+              {/* ĐÃ XÓA "SYS: NORMAL" Ở ĐÂY */}
               <ShoppingBag size={14} className="text-cyber-blue" />
               {cart.length > 0 && (
-                <span className="text-[10px] font-bold text-black bg-cyber-blue px-1 -ml-1">
+                <span className="text-[10px] font-bold text-black bg-cyber-blue px-1 ml-1">
                   {cart.length}
                 </span>
               )}
@@ -206,7 +244,10 @@ const Header = ({
                         €$ {total.toLocaleString()}
                       </span>
                     </div>
-                    <button className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest">
+                    <button
+                      onClick={onCheckout}
+                      className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest"
+                    >
                       CHECKOUT
                     </button>
                   </div>
@@ -215,7 +256,6 @@ const Header = ({
             </div>
           </div>
 
-          {/* Audio Toggle Button */}
           <button
             onClick={toggleAudio}
             className={`flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 bg-black/50 backdrop-blur-md ${
@@ -265,10 +305,34 @@ const Header = ({
 
 function App() {
   const { scrollY } = useScroll();
-  const { cart, addToCart, removeFromCart, total, lastUpdate } = useCart();
+  const { cart, addToCart, removeFromCart, clearCart, total, lastUpdate } =
+    useCart();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
-  // Parallax effects for Hero section
+  const [currentView, setCurrentView] = useState("home");
+
+  // AUTH STATE
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        setShowAuthModal(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+    }
+  };
+
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
@@ -278,11 +342,31 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      {/* Background 3D Scene */}
       <Scene3D scrollY={scrollY} />
 
-      {/* Main Content Layer */}
-      <div className="relative z-10 flex flex-col">
+      <AnimatePresence>
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {currentView === "checkout" && (
+          <CheckoutPage
+            cart={cart}
+            total={total}
+            onBack={() => setCurrentView("home")}
+            onClearCart={clearCart}
+            user={user}
+          />
+        )}
+      </AnimatePresence>
+
+      <div
+        className={`relative z-10 flex flex-col transition-opacity duration-500 ${
+          currentView === "checkout"
+            ? "opacity-0 pointer-events-none h-0 overflow-hidden"
+            : "opacity-100"
+        }`}
+      >
         <section className="h-screen flex flex-col relative">
           <Header
             cart={cart}
@@ -291,11 +375,14 @@ function App() {
             isMuted={isMuted}
             toggleAudio={toggleAudio}
             lastUpdate={lastUpdate}
+            onCheckout={() => setCurrentView("checkout")}
+            user={user}
+            onOpenAuth={() => setShowAuthModal(true)}
+            onLogout={handleLogout}
           />
 
           <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-              {/* Hero Text Content */}
               <motion.div
                 style={{ y: yText, opacity: opacityText }}
                 className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -336,7 +423,6 @@ function App() {
             </div>
           </main>
 
-          {/* Scroll Down Indicator */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 10, 0] }}
@@ -351,7 +437,6 @@ function App() {
           </motion.div>
         </section>
 
-        {/* Content Sections */}
         <InfoSection />
         <ArsenalSection addToCart={addToCart} />
 
@@ -360,10 +445,13 @@ function App() {
         </footer>
       </div>
 
-      {/* Floating UI Elements */}
-      <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
-      <AIChat />
-      <BackToTop />
+      {currentView === "home" && (
+        <>
+          <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
+          <AIChat />
+          <BackToTop />
+        </>
+      )}
     </div>
   );
 }
