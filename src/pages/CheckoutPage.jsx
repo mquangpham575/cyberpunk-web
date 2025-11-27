@@ -53,7 +53,7 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
         {/* Header Title của trang Checkout */}
         <header className="flex justify-between items-center border-b border-white/10 pb-6 mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("")}
             className="flex items-center gap-2 text-gray-400 hover:text-cyber-blue transition-colors group bg-black/50 px-3 py-2 rounded-sm border border-transparent hover:border-cyber-blue/30"
           >
             <ArrowLeft
