@@ -480,7 +480,8 @@ function App() {
             animate={{ opacity: 1, y: [0, 10, 0] }}
             transition={{ delay: 1, duration: 2, repeat: Infinity }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer"
-            onClick={() => handleScrollTo("system-status")}
+            // Đã đổi ID target sang black-market vì section này giờ nằm trước
+            onClick={() => handleScrollTo("black-market")}
           >
             <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70">
               Scroll Down
@@ -489,8 +490,9 @@ function App() {
           </motion.div>
         </section>
 
-        <InfoSection />
+        {/* Đã đảo vị trí: ArsenalSection (Market) lên trước InfoSection (Status) */}
         <ArsenalSection addToCart={addToCart} />
+        <InfoSection />
 
         <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
           <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
