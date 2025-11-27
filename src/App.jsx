@@ -1,51 +1,56 @@
+// src/App.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import {
   motion,
   useScroll,
-  useTransform,
   useMotionValueEvent,
   AnimatePresence,
+  useTransform,
 } from "framer-motion";
 import {
-  ChevronDown,
   Volume2,
   VolumeX,
   ShoppingBag,
   Trash2,
   User,
   LogOut,
-  Crosshair, // Đã thêm import icon này
+  Crosshair,
 } from "lucide-react";
 
 // Firebase Services
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "./services/firebase.js";
-import AuthModal from "./components/AuthModal";
-import ShadowOperations from "./components/ShadowOperations";
 
 // Component Imports
 import Scene3D from "./components/Scene3D.jsx";
-import { CyberButton, GlitchTitle } from "./components/UIComponents";
-import InfoSection from "./components/InfoSection";
-import ArsenalSection from "./components/ArsenalSection";
+import AuthModal from "./components/AuthModal";
 import AIChat from "./components/AIChat";
 import BackToTop from "./components/BackToTop";
-import CheckoutPage from "./components/CheckoutPage";
 
-// Data Import (Required for rehydrating icons)
+// Page Imports (Bạn cần đảm bảo đã tạo các file này)
+import HomePage from "./pages/HomePage";
+import MissionPage from "./pages/MissionPage";
+import CheckoutPage from "./pages/CheckoutPage";
+
+// Data Import
 import { INVENTORY_DATA } from "./data/inventoryData";
 
 /* =========================================
-   CUSTOM HOOKS
+   CUSTOM HOOKS (Giữ nguyên)
    ========================================= */
 
-// Cart Management Hook with Cloud/Local Sync
 const useCart = (user) => {
   const [cart, setCart] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(0);
 
-  // Helper: Restore icons to cart items from source data
   const rehydrateCart = (rawItems) => {
     return rawItems.map((item) => {
       const original = INVENTORY_DATA.find((i) => i.id === item.id);
@@ -53,24 +58,20 @@ const useCart = (user) => {
     });
   };
 
-  // Data Synchronization Effect
   useEffect(() => {
     if (user) {
-      // Authenticated: Sync with Firestore
       const cartRef = doc(db, "carts", user.uid);
       const unsubscribe = onSnapshot(cartRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const cloudItems = docSnapshot.data().items || [];
           setCart(rehydrateCart(cloudItems));
         } else {
-          // Fallback: Check local storage for unsynced data
           const localCart = localStorage.getItem("arasaka_cart_v1");
           if (!localCart) setCart([]);
         }
       });
       return () => unsubscribe();
     } else {
-      // Guest: Use LocalStorage
       try {
         const savedCart = localStorage.getItem("arasaka_cart_v1");
         if (savedCart) setCart(rehydrateCart(JSON.parse(savedCart)));
@@ -81,23 +82,18 @@ const useCart = (user) => {
     }
   }, [user]);
 
-  // Persistence Logic (Strip icons before saving)
   const saveCart = async (newCart) => {
-    setCart(newCart); // Update UI immediately
+    setCart(newCart);
     setLastUpdate(Date.now());
-
-    // Remove icon components (symbols) to prevent Firestore errors
     const sanitizedCart = newCart.map(({ icon, ...rest }) => rest);
 
     if (user) {
-      // Save to Cloud
       try {
         await setDoc(doc(db, "carts", user.uid), { items: sanitizedCart });
       } catch (error) {
         console.error("Firestore Save Error:", error);
       }
     } else {
-      // Save to LocalStorage
       localStorage.setItem("arasaka_cart_v1", JSON.stringify(sanitizedCart));
     }
   };
@@ -125,7 +121,6 @@ const useCart = (user) => {
   return { cart, addToCart, removeFromCart, clearCart, total, lastUpdate };
 };
 
-// Background Audio Hook
 const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
@@ -154,7 +149,7 @@ const useAudio = (src) => {
 };
 
 /* =========================================
-   HEADER COMPONENT
+   HEADER COMPONENT (Updated for Router)
    ========================================= */
 
 const Header = ({
@@ -164,11 +159,13 @@ const Header = ({
   isMuted,
   toggleAudio,
   lastUpdate,
-  onCheckout,
   user,
   onOpenAuth,
   onLogout,
+  // Props điều hướng mới
   onOpenMissions,
+  onOpenCheckout,
+  onGoHome,
 }) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -192,7 +189,7 @@ const Header = ({
       <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
         {/* Brand Logo */}
         <div
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={onGoHome}
           className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow cursor-pointer select-none drop-shadow-[0_0_10px_rgba(252,232,0,0.5)]"
         >
           ARASAKA<span className="text-white">_LABS</span>
@@ -246,7 +243,6 @@ const Header = ({
 
             {/* Dropdown Content */}
             <div className="absolute right-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-              {/* Bridge for hover state */}
               <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
               <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
               <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
@@ -307,7 +303,7 @@ const Header = ({
                       </span>
                     </div>
                     <button
-                      onClick={onCheckout}
+                      onClick={onOpenCheckout}
                       className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest"
                     >
                       THANH TOÁN
@@ -363,20 +359,86 @@ const Header = ({
 };
 
 /* =========================================
-   MAIN APP LAYOUT
+   ROUTER & ANIMATION WRAPPER
+   ========================================= */
+
+// Component này xử lý việc định tuyến và animation
+// Nó nhận tất cả props từ App để truyền xuống các Page
+const AnimatedRoutes = ({
+  cart,
+  total,
+  addToCart,
+  removeFromCart,
+  clearCart,
+  user,
+  scrollY,
+  yText,
+  opacityText,
+}) => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              scrollY={scrollY}
+              yText={yText}
+              opacityText={opacityText}
+              addToCart={addToCart}
+            />
+          }
+        />
+        <Route path="/missions" element={<MissionPage />} />
+        <Route
+          path="/checkout"
+          element={
+            <CheckoutPage
+              cart={cart}
+              total={total}
+              onClearCart={clearCart}
+              user={user}
+            />
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+// Wrapper để Header dùng được hooks của Router (useNavigate)
+const HeaderWithRouter = (props) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Ẩn Header nếu đang ở trang checkout
+  if (location.pathname === "/checkout") return null;
+
+  return (
+    <Header
+      {...props}
+      onOpenCheckout={() => navigate("/checkout")}
+      onOpenMissions={() => navigate("/missions")}
+      onGoHome={() => navigate("/")}
+    />
+  );
+};
+
+/* =========================================
+   MAIN APP COMPONENT
    ========================================= */
 
 function App() {
+  // Global hooks
   const { scrollY } = useScroll();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
-
-  const [currentView, setCurrentView] = useState("home"); // home, checkout, missions
 
   // Auth State
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Auth Observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -385,7 +447,7 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Initialize Cart with User
+  // Cart State
   const { cart, addToCart, removeFromCart, clearCart, total, lastUpdate } =
     useCart(user);
 
@@ -397,137 +459,54 @@ function App() {
     }
   };
 
+  // Parallax Values for Home Page
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
-  const handleScrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-      <Scene3D scrollY={scrollY} />
+    <Router>
+      <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
+        {/* Background 3D cố định - không reload khi đổi trang */}
+        <Scene3D scrollY={scrollY} />
 
-      {/* Authentication Modal */}
-      <AnimatePresence>
-        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
-      </AnimatePresence>
+        {/* Global Modal */}
+        <AnimatePresence>
+          {showAuthModal && (
+            <AuthModal onClose={() => setShowAuthModal(false)} />
+          )}
+        </AnimatePresence>
 
-      {/* Checkout Page View */}
-      <AnimatePresence>
-        {currentView === "checkout" && (
-          <CheckoutPage
-            cart={cart}
-            total={total}
-            onBack={() => setCurrentView("home")}
-            onClearCart={clearCart}
-            user={user}
-          />
-        )}
-      </AnimatePresence>
+        {/* Header (Điều hướng) */}
+        <HeaderWithRouter
+          cart={cart}
+          removeFromCart={removeFromCart}
+          total={total}
+          isMuted={isMuted}
+          toggleAudio={toggleAudio}
+          lastUpdate={lastUpdate}
+          user={user}
+          onOpenAuth={() => setShowAuthModal(true)}
+          onLogout={handleLogout}
+        />
 
-      {/* Missions/Shadow Operations View */}
-      <AnimatePresence>
-        {currentView === "missions" && (
-          <ShadowOperations onBack={() => setCurrentView("home")} />
-        )}
-      </AnimatePresence>
+        {/* Khu vực nội dung thay đổi (Pages) */}
+        <AnimatedRoutes
+          cart={cart}
+          total={total}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+          clearCart={clearCart}
+          user={user}
+          scrollY={scrollY}
+          yText={yText}
+          opacityText={opacityText}
+        />
 
-      {/* Main Content Layer */}
-      <div
-        className={`relative z-10 flex flex-col transition-opacity duration-500 ${
-          currentView !== "home"
-            ? "opacity-0 pointer-events-none h-0 overflow-hidden"
-            : "opacity-100"
-        }`}
-      >
-        <section className="h-screen flex flex-col relative">
-          <Header
-            cart={cart}
-            removeFromCart={removeFromCart}
-            total={total}
-            isMuted={isMuted}
-            toggleAudio={toggleAudio}
-            lastUpdate={lastUpdate}
-            onCheckout={() => setCurrentView("checkout")}
-            user={user}
-            onOpenAuth={() => setShowAuthModal(true)}
-            onLogout={handleLogout}
-            onOpenMissions={() => setCurrentView("missions")}
-          />
-
-          <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-              <motion.div
-                style={{ y: yText, opacity: opacityText }}
-                className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
-              >
-                <div className="flex items-center gap-2 text-cyber-pink font-mono text-xs md:text-sm tracking-widest mb-2">
-                  <span className="w-1.5 h-1.5 bg-cyber-pink rounded-full animate-pulse" />
-                  SECURE CONNECTION
-                </div>
-
-                <div>
-                  <GlitchTitle text="DIGITAL" />
-                  <GlitchTitle text="HORIZON" />
-                </div>
-
-                <p className="text-gray-400 text-base md:text-lg max-w-lg font-sans border-l-2 border-cyber-blue pl-4 leading-relaxed backdrop-blur-sm bg-black/20 p-2 rounded-r-lg">
-                  Truy cập kho dữ liệu nguyên mẫu cấp S. Cung cấp vũ khí thực
-                  nghiệm và Cyberware thế hệ mới. Chỉ dành cho nhân sự được ủy
-                  quyền hoặc lính đánh thuê cao cấp.
-                </p>
-
-                <div className="flex flex-wrap gap-4 pt-6">
-                  <CyberButton
-                    variant="yellow"
-                    onClick={() => handleScrollTo("black-market")}
-                  >
-                    ENTER MARKET
-                  </CyberButton>
-                  <CyberButton
-                    variant="blue"
-                    onClick={() => handleScrollTo("system-status")}
-                  >
-                    VIEW STATUS
-                  </CyberButton>
-                </div>
-              </motion.div>
-
-              <div className="hidden lg:block lg:col-span-5 h-full min-h-[300px]"></div>
-            </div>
-          </main>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 10, 0] }}
-            transition={{ delay: 1, duration: 2, repeat: Infinity }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer"
-            onClick={() => handleScrollTo("black-market")}
-          >
-            <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70">
-              Scroll Down
-            </span>
-            <ChevronDown size={24} />
-          </motion.div>
-        </section>
-
-        <ArsenalSection addToCart={addToCart} />
-        <InfoSection />
-
-        <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600">
-          <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
-        </footer>
+        {/* Global Widgets */}
+        <AIChat />
+        <BackToTop />
       </div>
-
-      {currentView === "home" && (
-        <>
-          <div className="fixed bottom-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-cyber-blue to-transparent opacity-50 z-50" />
-          <AIChat />
-          <BackToTop />
-        </>
-      )}
-    </div>
+    </Router>
   );
 }
 

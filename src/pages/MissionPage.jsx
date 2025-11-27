@@ -1,10 +1,8 @@
-// src/components/ShadowOperations.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
-  Target,
   Skull,
-  Crosshair,
   Wifi,
   Briefcase,
   AlertTriangle,
@@ -13,30 +11,28 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-// Import dữ liệu từ file riêng
+// Import dữ liệu
 import { MISSION_DATA } from "../data/missionData";
 
-const ShadowOperations = ({ onBack }) => {
+const MissionPage = () => {
+  const navigate = useNavigate();
   const [selectedMission, setSelectedMission] = useState(null);
-  const [filter, setFilter] = useState("all"); // all, available, locked
+  const [filter, setFilter] = useState("all");
 
   // Xử lý phím Escape
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         if (selectedMission) {
-          // Nếu đang mở modal -> đóng modal
           setSelectedMission(null);
         } else {
-          // Nếu không -> thoát trang
-          onBack();
+          navigate("/"); // Quay về trang chủ
         }
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedMission, onBack]);
+  }, [selectedMission, navigate]);
 
   const getRiskColor = (risk) => {
     switch (risk) {
@@ -66,7 +62,6 @@ const ShadowOperations = ({ onBack }) => {
     }
   };
 
-  // Helper để dịch text hiển thị
   const getFilterLabel = (f) => {
     switch (f) {
       case "all":
@@ -82,18 +77,16 @@ const ShadowOperations = ({ onBack }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] bg-black/95 text-white overflow-hidden flex flex-col"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="min-h-screen bg-black/95 text-white flex flex-col pt-20"
     >
-      {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
 
-      {/* Header */}
-      <header className="p-6 border-b border-white/10 flex justify-between items-center bg-black/80 backdrop-blur z-10">
+      <header className="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/80 backdrop-blur z-10">
         <button
-          onClick={onBack}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-gray-400 hover:text-cyber-blue transition-colors group"
         >
           <ArrowLeft
@@ -114,9 +107,7 @@ const ShadowOperations = ({ onBack }) => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Filters */}
+      <div className="flex-1 flex overflow-hidden relative z-10">
         <aside className="w-64 border-r border-white/10 p-6 hidden md:block">
           <h3 className="text-sm font-mono text-gray-500 mb-6">BỘ LỌC</h3>
           <ul className="space-y-4 font-mono text-sm">
@@ -144,7 +135,6 @@ const ShadowOperations = ({ onBack }) => {
           </ul>
         </aside>
 
-        {/* Mission Grid */}
         <main className="flex-1 p-8 overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {MISSION_DATA.filter(
@@ -160,9 +150,7 @@ const ShadowOperations = ({ onBack }) => {
                   mission.status === "locked" ? "opacity-50 grayscale" : ""
                 }`}
               >
-                {/* Hover Glow Effect */}
                 <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shine" />
-
                 <div className="flex justify-between items-start mb-4">
                   <div
                     className={`p-3 bg-black border ${getRiskColor(
@@ -179,14 +167,12 @@ const ShadowOperations = ({ onBack }) => {
                     ĐỘ KHÓ: {mission.risk.toUpperCase()}
                   </span>
                 </div>
-
                 <h3 className="font-display text-lg mb-2 group-hover:text-cyber-blue transition-colors">
                   {mission.title}
                 </h3>
                 <p className="text-gray-400 text-xs font-mono line-clamp-2 mb-4">
                   {mission.desc}
                 </p>
-
                 <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
                   <span className="text-cyber-yellow font-mono font-bold">
                     €$ {mission.reward.toLocaleString()}
@@ -201,26 +187,22 @@ const ShadowOperations = ({ onBack }) => {
         </main>
       </div>
 
-      {/* Mission Detail Modal */}
       <AnimatePresence>
         {selectedMission && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-            // Click outside to close can also be added here
+            className="fixed inset-0 z-70 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setSelectedMission(null)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              // Stop propagation to prevent closing when clicking inside modal
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl bg-black border border-cyber-blue relative shadow-[0_0_50px_rgba(0,240,255,0.15)]"
             >
-              {/* Modal Header */}
               <div className="bg-cyber-blue/10 p-6 border-b border-cyber-blue flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-display text-white mb-1">
@@ -238,8 +220,6 @@ const ShadowOperations = ({ onBack }) => {
                   <X />
                 </button>
               </div>
-
-              {/* Modal Body */}
               <div className="p-8 space-y-6">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
@@ -259,7 +239,6 @@ const ShadowOperations = ({ onBack }) => {
                     </p>
                   </div>
                 </div>
-
                 <div className="bg-white/5 p-4 border-l-2 border-cyber-yellow">
                   <h4 className="text-cyber-yellow font-mono text-xs uppercase mb-2">
                     Chi Tiết Nhiệm Vụ
@@ -274,15 +253,12 @@ const ShadowOperations = ({ onBack }) => {
                     </span>
                   </p>
                 </div>
-
                 <div className="flex justify-between items-center pt-4">
                   <div className="text-2xl text-cyber-yellow font-display">
                     THÙ LAO: €$ {selectedMission.reward.toLocaleString()}
                   </div>
                 </div>
               </div>
-
-              {/* Modal Footer */}
               <div className="p-6 border-t border-white/10 flex gap-4">
                 <button
                   onClick={() => setSelectedMission(null)}
@@ -291,13 +267,13 @@ const ShadowOperations = ({ onBack }) => {
                   Từ Chối
                 </button>
                 {selectedMission.status === "available" ? (
-                  <button className="flex-[2] py-3 bg-cyber-blue text-black font-bold font-mono uppercase hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all clip-path-polygon">
+                  <button className="flex-2 py-3 bg-cyber-blue text-black font-bold font-mono uppercase hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all clip-path-polygon">
                     CHẤP NHẬN HỢP ĐỒNG
                   </button>
                 ) : (
                   <button
                     disabled
-                    className="flex-[2] py-3 bg-gray-800 text-gray-500 font-mono uppercase cursor-not-allowed"
+                    className="flex-2 py-3 bg-gray-800 text-gray-500 font-mono uppercase cursor-not-allowed"
                   >
                     CHƯA MỞ KHÓA
                   </button>
@@ -311,4 +287,4 @@ const ShadowOperations = ({ onBack }) => {
   );
 };
 
-export default ShadowOperations;
+export default MissionPage;
