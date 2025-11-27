@@ -199,7 +199,7 @@ const UserInfoPage = ({ user, onLogout }) => {
           </div>
 
           {/* HIỂN THỊ TÊN (Lấy trực tiếp từ formData để Preview realtime) */}
-          <h2 className="text-xl font-display text-white mb-1 text-center uppercase tracking-wider break-words w-full px-2">
+          <h2 className="text-xl font-display text-white mb-1 text-center uppercase tracking-wider wrap-break-word w-full px-2">
             {formData.displayName || "OPERATOR"}
           </h2>
 
@@ -260,7 +260,7 @@ const UserInfoPage = ({ user, onLogout }) => {
           <div className="space-y-4 mb-8">
             {/* Username Field (NEW) */}
             <div className="group">
-              <label className="text-[10px] text-gray-500 font-mono uppercase block mb-1 flex justify-between">
+              <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Tên Hiển Thị (Username)
                 <Edit3 size={10} className="text-cyber-blue" />
               </label>
@@ -290,7 +290,7 @@ const UserInfoPage = ({ user, onLogout }) => {
 
             {/* Phone Number (Editable) */}
             <div className="group">
-              <label className="text-[10px] text-gray-500 font-mono uppercase block mb-1 flex justify-between">
+              <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Số Điện Thoại
                 <Edit3 size={10} className="text-cyber-blue" />
               </label>
@@ -309,7 +309,7 @@ const UserInfoPage = ({ user, onLogout }) => {
 
             {/* Address (Editable) */}
             <div className="group">
-              <label className="text-[10px] text-gray-500 font-mono uppercase block mb-1 flex justify-between">
+              <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Địa Chỉ Giao Hàng
                 <Edit3 size={10} className="text-cyber-blue" />
               </label>
@@ -328,7 +328,7 @@ const UserInfoPage = ({ user, onLogout }) => {
 
             {/* Wallet (Editable) */}
             <div className="group">
-              <label className="text-[10px] text-gray-500 font-mono uppercase block mb-1 flex justify-between">
+              <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Ví Liên Kết / Thẻ Tín Dụng
                 <Edit3 size={10} className="text-cyber-yellow" />
               </label>
