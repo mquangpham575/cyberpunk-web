@@ -7,10 +7,11 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../services/firebase"; // Import từ file firebase.js bạn vừa tạo
+import { auth } from "../services/firebase"; // Firebase configuration import
 
 const AuthModal = ({ onClose }) => {
-  const [isLogin, setIsLogin] = useState(true); // Toggle giữa Login/Register
+  // State for auth mode (Login/Register) and form data
+  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -19,11 +20,13 @@ const AuthModal = ({ onClose }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -31,27 +34,29 @@ const AuthModal = ({ onClose }) => {
 
     try {
       if (isLogin) {
-        // ĐĂNG NHẬP
+        // Execute Login
         await signInWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
       } else {
-        // ĐĂNG KÝ (TẠO USER MỚI)
+        // Execute Registration
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
-        // Cập nhật tên hiển thị
+        // Update user profile (Display Name)
         await updateProfile(userCredential.user, {
           displayName: formData.username,
         });
       }
-      onClose(); // Đóng modal khi thành công
+      // Close modal on successful authentication
+      onClose();
     } catch (err) {
       console.error(err);
+      // Map Firebase error codes to user-friendly messages
       if (err.code === "auth/email-already-in-use")
         setError("LỖI: Email đã được sử dụng.");
       else if (
@@ -76,6 +81,7 @@ const AuthModal = ({ onClose }) => {
       className="fixed inset-0 z-100 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
     >
       <div className="relative w-full max-w-md bg-black border border-cyber-blue shadow-[0_0_20px_rgba(0,240,255,0.2)] p-8 overflow-hidden">
+        {/* Background Grid Effect */}
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#00f0ff12_1px,transparent_1px),linear-gradient(to_bottom,#00f0ff12_1px,transparent_1px)] bg-size-[20px_20px] pointer-events-none"></div>
 
         <button
@@ -102,6 +108,7 @@ const AuthModal = ({ onClose }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Render Username field only for Registration */}
             {!isLogin && (
               <div className="space-y-1">
                 <label className="text-[10px] font-mono text-gray-400 uppercase">

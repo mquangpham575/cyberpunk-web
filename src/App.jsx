@@ -35,23 +35,8 @@ import CheckoutPage from "./components/CheckoutPage";
 // =========================================
 
 const useCart = () => {
-  // 1. Khởi tạo state: Lấy dữ liệu từ LocalStorage nếu có
-  const [cart, setCart] = useState(() => {
-    try {
-      const savedCart = localStorage.getItem("arasaka_cart_v1");
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch (error) {
-      console.error("Lỗi đọc dữ liệu giỏ hàng:", error);
-      return [];
-    }
-  });
-
+  const [cart, setCart] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(0);
-
-  // 2. Effect: Tự động lưu vào LocalStorage mỗi khi giỏ hàng thay đổi
-  useEffect(() => {
-    localStorage.setItem("arasaka_cart_v1", JSON.stringify(cart));
-  }, [cart]);
 
   const addToCart = (item) => {
     setCart((prev) => [...prev, item]);
@@ -65,7 +50,6 @@ const useCart = () => {
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem("arasaka_cart_v1"); // Xóa sạch bộ nhớ
     setLastUpdate(Date.now());
   };
 
@@ -184,7 +168,7 @@ const Header = ({
               onClick={onOpenAuth}
               className="hidden md:block px-4 py-1 border border-cyber-blue text-cyber-blue font-mono text-[10px] hover:bg-cyber-blue hover:text-black transition-colors uppercase tracking-widest"
             >
-              // LOGIN
+              Đăng nhập/ Đăng kí
             </button>
           )}
 
@@ -207,13 +191,13 @@ const Header = ({
 
               <div className="p-4">
                 <h3 className="text-cyber-blue font-mono text-xs font-bold border-b border-white/10 pb-2 mb-2 flex justify-between">
-                  <span>// SHOPPING_LIST</span>
+                  <span> Giỏ hàng </span>
                   <span>[{cart.length}]</span>
                 </h3>
 
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    Empty...
+                    Giỏ hàng trống...
                   </div>
                 ) : (
                   <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
@@ -255,7 +239,7 @@ const Header = ({
                 {cart.length > 0 && (
                   <div className="border-t border-white/10 pt-2">
                     <div className="flex justify-between items-center font-mono text-xs text-white mb-3">
-                      <span>TOTAL:</span>
+                      <span>Tổng tiền:</span>
                       <span className="text-cyber-yellow">
                         €$ {total.toLocaleString()}
                       </span>

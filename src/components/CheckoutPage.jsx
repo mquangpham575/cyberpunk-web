@@ -1,14 +1,13 @@
+// src/components/CheckoutPage.jsx
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   X,
   CheckCircle,
   CreditCard,
   MapPin,
-  User,
   ShieldCheck,
   ArrowLeft,
-  Truck,
 } from "lucide-react";
 
 const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
@@ -19,11 +18,11 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    // Giả lập quá trình thanh toán (3 giây)
+    // Giả lập xử lý thanh toán (3 giây)
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);
-      onClearCart(); // Xóa giỏ hàng sau khi thành công
+      onClearCart(); // Xóa giỏ hàng
     }, 3000);
   };
 
@@ -33,13 +32,14 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
+      // SỬA LỖI: z-100 -> z-[100] để đảm bảo nó nằm trên cùng
       className="fixed inset-0 z-100 bg-black text-white overflow-y-auto"
     >
-      {/* Background Decor */}
+      {/* Background Decor - SỬA LỖI cú pháp bg-size */}
       <div className="fixed inset-0 pointer-events-none opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[32px_32px]"></div>
 
-      <div className="container mx-auto px-4 py-8 min-h-screen flex flex-col">
-        {/* HEADER CỦA TRANG CHECKOUT */}
+      <div className="container mx-auto px-4 py-8 min-h-screen flex flex-col relative z-10">
+        {/* HEADER */}
         <header className="flex justify-between items-center border-b border-white/10 pb-6 mb-8">
           <button
             onClick={onBack}
@@ -63,11 +63,11 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
         </header>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* CỘT TRÁI: THÔNG TIN GIAO HÀNG & THANH TOÁN */}
+          {/* CỘT TRÁI: FORM */}
           <div className="lg:col-span-7 space-y-8">
             {!isSuccess ? (
               <form onSubmit={handlePayment} className="space-y-8">
-                {/* Section: Delivery */}
+                {/* Delivery Info */}
                 <div className="bg-white/5 border border-white/10 p-6 relative overflow-hidden group hover:border-cyber-blue/50 transition-colors">
                   <h3 className="text-xl font-display text-cyber-yellow mb-6 flex items-center gap-2">
                     <MapPin className="text-cyber-yellow" /> SHIPPING_NODE
@@ -81,7 +81,8 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
                         required
                         type="text"
                         placeholder="V. MERCENARY"
-                        defaultValue={user ? user.displayName : ""}
+                        // SỬA LỖI: Kiểm tra user tồn tại trước khi lấy tên
+                        defaultValue={user?.displayName || ""}
                         className="w-full bg-black border border-white/20 p-3 text-white focus:border-cyber-blue outline-none transition-all font-mono"
                       />
                     </div>
@@ -110,7 +111,7 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
                   </div>
                 </div>
 
-                {/* Section: Payment */}
+                {/* Payment Info */}
                 <div className="bg-white/5 border border-white/10 p-6 relative overflow-hidden group hover:border-cyber-pink/50 transition-colors">
                   <h3 className="text-xl font-display text-cyber-pink mb-6 flex items-center gap-2">
                     <CreditCard className="text-cyber-pink" /> PAYMENT_METHOD
@@ -189,7 +190,7 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
             )}
           </div>
 
-          {/* CỘT PHẢI: ORDER SUMMARY */}
+          {/* CỘT PHẢI: SUMMARY */}
           <div className="lg:col-span-5">
             <div className="sticky top-8 bg-black/50 backdrop-blur-md border border-white/10 p-6">
               <h3 className="text-sm font-mono text-gray-500 border-b border-white/10 pb-4 mb-4">
@@ -207,10 +208,7 @@ const CheckoutPage = ({ cart, total, onBack, onClearCart, user }) => {
                       key={idx}
                       className="flex gap-4 items-start animate-fade-in"
                     >
-                      <div
-                        className={`w-12 h-12 shrink-0 bg-white/5 border border-white/10 flex items-center justify-center`}
-                      >
-                        {/* Nếu item có icon, render icon. Nếu không, dùng box rỗng */}
+                      <div className="w-12 h-12 shrink-0 bg-white/5 border border-white/10 flex items-center justify-center">
                         {item.icon ? (
                           <item.icon size={20} className="text-gray-400" />
                         ) : (
