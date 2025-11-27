@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../services/firebase";
+import { signOut } from "firebase/auth"; // [QUAN TRỌNG] Import hàm đăng xuất
+import { db, auth } from "../services/firebase"; // [QUAN TRỌNG] Import auth từ config
 import {
   User,
   Mail,
-  Shield,
   CreditCard,
   Activity,
   LogOut,
@@ -19,15 +19,15 @@ import {
   Edit3,
 } from "lucide-react";
 
-const UserInfoPage = ({ user, onLogout }) => {
+const UserInfoPage = ({ user }) => {
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Form State: Thêm displayName vào đây để quản lý
+  // Form State
   const [formData, setFormData] = useState({
-    displayName: "", // Thêm trường tên
+    displayName: "",
     phoneNumber: "",
     address: "",
     walletId: "",
@@ -46,11 +46,7 @@ const UserInfoPage = ({ user, onLogout }) => {
       }
     };
     window.addEventListener("keydown", handleEsc);
-
-    // Cleanup listener
-    return () => {
-      window.removeEventListener("keydown", handleEsc);
-    };
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [navigate]);
 
   // Fetch Data
@@ -61,7 +57,6 @@ const UserInfoPage = ({ user, onLogout }) => {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
 
-        // Logic xác định tên hiển thị ban đầu
         const fallbackName =
           user.displayName || user.email?.split("@")[0] || "OPERATOR";
 
@@ -75,7 +70,7 @@ const UserInfoPage = ({ user, onLogout }) => {
             walletId: data.walletId || "",
           });
         } else {
-          // Initialize default profile
+          // Initialize default profile if not exists
           const defaultData = {
             displayName: fallbackName,
             email: user.email,
@@ -83,20 +78,13 @@ const UserInfoPage = ({ user, onLogout }) => {
             itemsBought: 0,
             missionsCompleted: 0,
             accountStatus: "XÁC THỰC",
-            walletId: `0x${Math.floor(Math.random() * 100000000)
-              .toString(16)
-              .toUpperCase()}-2077`,
+            walletId: "",
             joinedAt: new Date().toISOString(),
             phoneNumber: "",
             address: "",
           };
 
-          try {
-            await setDoc(docRef, defaultData);
-          } catch (e) {
-            console.warn("Lỗi tạo data:", e);
-          }
-
+          await setDoc(docRef, defaultData);
           setProfileData(defaultData);
           setFormData({
             displayName: defaultData.displayName,
@@ -123,7 +111,7 @@ const UserInfoPage = ({ user, onLogout }) => {
       await setDoc(
         docRef,
         {
-          displayName: formData.displayName, // Lưu tên mới
+          displayName: formData.displayName,
           phoneNumber: formData.phoneNumber,
           address: formData.address,
           walletId: formData.walletId,
@@ -138,6 +126,8 @@ const UserInfoPage = ({ user, onLogout }) => {
         address: formData.address,
         walletId: formData.walletId,
       }));
+
+      // Có thể thêm thông báo Toast ở đây nếu muốn
     } catch (error) {
       console.error("Save error:", error);
     } finally {
@@ -150,7 +140,18 @@ const UserInfoPage = ({ user, onLogout }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // --- XỬ LÝ ĐĂNG XUẤT TRỰC TIẾP ---
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Gọi Firebase SignOut
+      navigate("/login"); // Điều hướng về Login
+    } catch (error) {
+      console.error("Lỗi đăng xuất:", error);
+    }
+  };
+
   if (!user) return null;
+
   if (loading)
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -198,7 +199,6 @@ const UserInfoPage = ({ user, onLogout }) => {
             </div>
           </div>
 
-          {/* HIỂN THỊ TÊN (Lấy trực tiếp từ formData để Preview realtime) */}
           <h2 className="text-xl font-display text-white mb-1 text-center uppercase tracking-wider wrap-break-word w-full px-2">
             {formData.displayName || "OPERATOR"}
           </h2>
@@ -228,7 +228,7 @@ const UserInfoPage = ({ user, onLogout }) => {
             </button>
           </div>
 
-          {/* Stats Grid (Read-only) */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-black/50 border border-white/5 p-3 text-center">
               <div className="text-xl font-display text-cyber-yellow mb-1">
@@ -258,7 +258,7 @@ const UserInfoPage = ({ user, onLogout }) => {
 
           {/* Input Fields */}
           <div className="space-y-4 mb-8">
-            {/* Username Field (NEW) */}
+            {/* Username Field */}
             <div className="group">
               <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Tên Hiển Thị (Username)
@@ -288,7 +288,7 @@ const UserInfoPage = ({ user, onLogout }) => {
               </div>
             </div>
 
-            {/* Phone Number (Editable) */}
+            {/* Phone Number */}
             <div className="group">
               <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Số Điện Thoại
@@ -307,7 +307,7 @@ const UserInfoPage = ({ user, onLogout }) => {
               </div>
             </div>
 
-            {/* Address (Editable) */}
+            {/* Address */}
             <div className="group">
               <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Địa Chỉ Giao Hàng
@@ -326,7 +326,7 @@ const UserInfoPage = ({ user, onLogout }) => {
               </div>
             </div>
 
-            {/* Wallet (Editable) */}
+            {/* Wallet */}
             <div className="group">
               <label className="text-[10px] text-gray-500 font-mono uppercase mb-1 flex justify-between">
                 Ví Liên Kết / Thẻ Tín Dụng
@@ -348,10 +348,7 @@ const UserInfoPage = ({ user, onLogout }) => {
 
           <div className="mt-auto flex justify-end">
             <button
-              onClick={() => {
-                onLogout();
-                navigate("/");
-              }}
+              onClick={handleLogout}
               className="flex items-center gap-2 px-6 py-3 border border-red-500/50 text-red-500 font-mono text-xs hover:bg-red-500 hover:text-black transition-all uppercase tracking-widest"
             >
               <LogOut size={14} /> ĐĂNG XUẤT
