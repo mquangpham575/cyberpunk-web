@@ -1,13 +1,18 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { CyberButton, GlitchTitle } from "../components/UIComponents";
 import InfoSection from "../components/InfoSection";
-import ArsenalSection from "../components/ArsenalSection";
 
-const HomePage = ({ scrollY, yText, opacityText, addToCart }) => {
+const HomePage = ({ scrollY, yText, opacityText }) => {
+  const navigate = useNavigate();
+
   const handleScrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
@@ -16,11 +21,17 @@ const HomePage = ({ scrollY, yText, opacityText, addToCart }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col"
+      // --- FIX QUAN TRỌNG ---
+      // 1. Xóa 'pb-24': Layout Flexbox đã tự lo phần footer, không cần padding nữa.
+      // 2. Giữ 'w-full' và 'relative'.
+      className="flex flex-col w-full relative z-0"
     >
+      {/* --- HERO SECTION --- */}
+      {/* Giảm mb-20 xuống mb-0 hoặc giữ lại tùy thẩm mỹ, nhưng tốt nhất nên giảm nếu thấy khoảng cách quá lớn */}
       <section className="h-screen flex flex-col relative">
         <main className="flex-1 flex items-center container mx-auto px-6 md:px-12 pt-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
+            {/* Left Column */}
             <motion.div
               style={{ y: yText, opacity: opacityText }}
               className="lg:col-span-7 space-y-6 pl-2 md:pl-4"
@@ -44,7 +55,7 @@ const HomePage = ({ scrollY, yText, opacityText, addToCart }) => {
               <div className="flex flex-wrap gap-4 pt-6">
                 <CyberButton
                   variant="yellow"
-                  onClick={() => handleScrollTo("black-market")}
+                  onClick={() => navigate("/market")}
                 >
                   ENTER MARKET
                 </CyberButton>
@@ -57,16 +68,18 @@ const HomePage = ({ scrollY, yText, opacityText, addToCart }) => {
               </div>
             </motion.div>
 
+            {/* Right Column */}
             <div className="hidden lg:block lg:col-span-5 h-full min-h-[300px]"></div>
           </div>
         </main>
 
+        {/* Scroll Indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, y: [0, 10, 0] }}
           transition={{ delay: 1, duration: 2, repeat: Infinity }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer"
-          onClick={() => handleScrollTo("black-market")}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer z-20"
+          onClick={() => handleScrollTo("system-status")}
         >
           <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70">
             Scroll Down
@@ -75,12 +88,11 @@ const HomePage = ({ scrollY, yText, opacityText, addToCart }) => {
         </motion.div>
       </section>
 
-      {/* ID này dùng để scroll xuống */}
-      <div id="black-market">
-        <ArsenalSection addToCart={addToCart} />
-      </div>
+      {/* --- CONTENT SECTIONS --- */}
 
-      <div id="system-status">
+      {/* System Status Section */}
+      {/* Đảm bảo phần tử cuối cùng này KHÔNG có margin-bottom quá lớn */}
+      <div id="system-status" className="relative z-10">
         <InfoSection />
       </div>
     </motion.div>

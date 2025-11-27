@@ -15,13 +15,14 @@ import {
   useTransform,
 } from "framer-motion";
 import {
-  Volume2,
-  VolumeX,
   ShoppingBag,
   Trash2,
   User,
   LogOut,
   Crosshair,
+  Home,
+  Store,
+  LogIn,
 } from "lucide-react";
 
 // Firebase Services
@@ -31,20 +32,21 @@ import { auth, db } from "./services/firebase.js";
 
 // Component Imports
 import Scene3D from "./components/Scene3D.jsx";
-import AuthModal from "./components/AuthModal";
 import AIChat from "./components/AIChat";
 import BackToTop from "./components/BackToTop";
 
-// Page Imports (Bạn cần đảm bảo đã tạo các file này)
+// Page Imports
 import HomePage from "./pages/HomePage";
 import MissionPage from "./pages/MissionPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import LoginPage from "./pages/LoginPage";
+import ArsenalPage from "./pages/ArsenalPage";
 
 // Data Import
 import { INVENTORY_DATA } from "./data/inventoryData";
 
 /* =========================================
-   CUSTOM HOOKS (Giữ nguyên)
+   CUSTOM HOOKS
    ========================================= */
 
 const useCart = (user) => {
@@ -149,7 +151,7 @@ const useAudio = (src) => {
 };
 
 /* =========================================
-   HEADER COMPONENT (Updated for Router)
+   HEADER COMPONENT
    ========================================= */
 
 const Header = ({
@@ -162,10 +164,10 @@ const Header = ({
   user,
   onOpenAuth,
   onLogout,
-  // Props điều hướng mới
   onOpenMissions,
   onOpenCheckout,
   onGoHome,
+  onOpenMarket,
 }) => {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -179,6 +181,9 @@ const Header = ({
     if (lastUpdate > 0) setHidden(false);
   }, [lastUpdate]);
 
+  const iconBtnStyle =
+    "p-2 text-gray-400 hover:text-cyber-blue transition-colors relative group hover:bg-white/5 rounded-sm";
+
   return (
     <motion.header
       variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
@@ -186,172 +191,183 @@ const Header = ({
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
     >
-      <div className="container mx-auto px-6 md:px-12 py-4 md:py-6 flex justify-between items-center">
-        {/* Brand Logo */}
-        <div
-          onClick={onGoHome}
-          className="text-xl md:text-2xl font-display tracking-widest text-cyber-yellow cursor-pointer select-none drop-shadow-[0_0_10px_rgba(252,232,0,0.5)]"
-        >
-          ARASAKA<span className="text-white">_LABS</span>
-        </div>
+      {/* Inject Keyframes for Music Bar Animation */}
+      <style>{`
+        @keyframes music-bar {
+          0%, 100% { height: 20%; }
+          50% { height: 100%; }
+        }
+      `}</style>
 
-        <div className="flex items-center gap-4">
-          {/* Missions Button */}
+      <div className="container mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
+        {/* --- LEFT GROUP --- */}
+        <div className="flex items-center gap-1 md:gap-4 bg-black/40 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
+          {/* 1. BGM Visualizer Button */}
           <button
-            onClick={onOpenMissions}
-            className="hidden md:flex items-center gap-2 text-cyber-yellow hover:text-white transition-colors font-mono text-xs tracking-widest border border-cyber-yellow/30 px-3 py-1 bg-cyber-yellow/5 hover:bg-cyber-yellow/20"
+            onClick={toggleAudio}
+            className="flex items-end justify-center gap-[3px] w-8 h-6 px-1 pb-1 cursor-pointer hover:opacity-80 transition-opacity mr-4 border-r border-white/10 pr-4 overflow-hidden"
+            title={isMuted ? "Play Music" : "Mute Music"}
           >
-            <Crosshair size={14} />
-            CONTRACTS
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="w-[3px] bg-cyber-pink rounded-t-sm"
+                style={{
+                  height: !isMuted ? "100%" : "20%",
+                  animation: !isMuted
+                    ? `music-bar ${
+                        0.4 + i * 0.15
+                      }s ease-in-out infinite alternate`
+                    : "none",
+                }}
+              />
+            ))}
           </button>
 
-          {/* User Status / Login */}
-          {user ? (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 border border-green-500/50 bg-green-500/10 backdrop-blur-md transition-colors">
-              <User size={12} className="text-green-500" />
-              <span className="text-[10px] font-mono text-green-400 uppercase tracking-wider">
-                {user.displayName || "OPERATOR"}
-              </span>
-              <div className="w-px h-3 bg-green-500/30 mx-1"></div>
-              <button
-                onClick={onLogout}
-                className="text-gray-400 hover:text-red-500 transition-colors"
-                title="Disconnect"
-              >
-                <LogOut size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={onOpenAuth}
-              className="hidden md:block px-4 py-1 border border-cyber-blue text-cyber-blue font-mono text-[10px] hover:bg-cyber-blue hover:text-black transition-colors uppercase tracking-widest"
-            >
-              Đăng nhập / Đăng kí
-            </button>
-          )}
+          {/* 2. Home */}
+          <button onClick={onGoHome} className={iconBtnStyle} title="Home">
+            <Home size={20} />
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+          </button>
 
-          {/* Cart Dropdown System */}
-          <div className="group relative">
-            <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-3 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
-              <ShoppingBag size={14} className="text-cyber-blue" />
-              {cart.length > 0 && (
-                <span className="text-[10px] font-bold text-black bg-cyber-blue px-1 ml-1">
-                  {cart.length}
-                </span>
-              )}
-            </div>
+          {/* 3. Market */}
+          <button
+            onClick={onOpenMarket}
+            className={iconBtnStyle}
+            title="Black Market"
+          >
+            <Store size={20} />
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+          </button>
 
-            {/* Dropdown Content */}
-            <div className="absolute right-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+          {/* 4. Cart */}
+          <div className="group/cart relative">
+            <div className={`${iconBtnStyle} cursor-pointer`}>
+              <div className="relative">
+                <ShoppingBag size={20} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-2 -right-2 w-4 h-4 bg-cyber-blue text-black text-[9px] font-bold flex items-center justify-center rounded-full">
+                    {cart.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            {/* Cart Dropdown */}
+            <div className="absolute left-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover/cart:opacity-100 group-hover/cart:visible transition-all duration-300 transform translate-y-2 group-hover/cart:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
               <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
-              <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
-              <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
-
               <div className="p-4">
-                <h3 className="text-cyber-blue font-mono text-xs font-bold border-b border-white/10 pb-2 mb-2 flex justify-between">
-                  <span> Giỏ hàng </span>
-                  <span>[{cart.length}]</span>
-                </h3>
-
+                <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+                  <span className="text-cyber-blue font-mono text-xs">
+                    CART
+                  </span>
+                  <span className="text-white font-mono text-xs">
+                    Total: €$ {total.toLocaleString()}
+                  </span>
+                </div>
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    Giỏ hàng trống...
+                    [EMPTY]
                   </div>
                 ) : (
-                  <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
-                    {cart.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center bg-white/5 p-2 border border-white/5 hover:border-cyber-blue/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <div
-                            className={`w-1 h-8 ${
-                              item.rarity === "legendary"
-                                ? "bg-cyber-yellow"
-                                : item.rarity === "epic"
-                                ? "bg-cyber-pink"
-                                : "bg-cyber-blue"
-                            }`}
-                          />
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-white font-mono text-[10px] truncate w-32">
+                  <>
+                    <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
+                      {cart.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center bg-white/5 p-2"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <div
+                              className={`w-1 h-6 ${
+                                item.rarity === "legendary"
+                                  ? "bg-cyber-yellow"
+                                  : "bg-cyber-blue"
+                              }`}
+                            />
+                            <span className="text-white font-mono text-[10px] truncate w-24">
                               {item.name}
                             </span>
-                            <span className="text-gray-400 font-mono text-[9px]">
-                              €$ {item.price}
-                            </span>
                           </div>
+                          <button
+                            onClick={() => removeFromCart(index)}
+                            className="text-gray-600 hover:text-red-500"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => removeFromCart(index)}
-                          className="text-gray-600 hover:text-red-500 transition-colors p-1"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {cart.length > 0 && (
-                  <div className="border-t border-white/10 pt-2">
-                    <div className="flex justify-between items-center font-mono text-xs text-white mb-3">
-                      <span>Tổng tiền:</span>
-                      <span className="text-cyber-yellow">
-                        €$ {total.toLocaleString()}
-                      </span>
+                      ))}
                     </div>
                     <button
                       onClick={onOpenCheckout}
-                      className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest"
+                      className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase"
                     >
-                      THANH TOÁN
+                      CHECKOUT
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Audio Toggle */}
+          {/* 5. Mission */}
           <button
-            onClick={toggleAudio}
-            className={`flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 bg-black/50 backdrop-blur-md ${
-              !isMuted
-                ? "border-cyber-pink text-cyber-pink shadow-[0_0_10px_rgba(255,0,60,0.3)]"
-                : "border-gray-600 text-gray-500 hover:border-white hover:text-white"
-            }`}
+            onClick={onOpenMissions}
+            className={iconBtnStyle}
+            title="Missions"
           >
-            {!isMuted ? (
-              <>
-                <div className="flex gap-0.5 items-end h-3">
-                  <span
-                    className="w-0.5 h-1.5 bg-cyber-pink animate-bounce"
-                    style={{ animationDuration: "0.4s" }}
-                  />
-                  <span
-                    className="w-0.5 h-3 bg-cyber-pink animate-bounce"
-                    style={{ animationDuration: "0.6s" }}
-                  />
-                  <span
-                    className="w-0.5 h-2 bg-cyber-pink animate-bounce"
-                    style={{ animationDuration: "0.5s" }}
-                  />
-                </div>
-                <span className="font-mono text-[10px] font-bold hidden sm:inline">
-                  BGM: ON
-                </span>
-              </>
-            ) : (
-              <>
-                <VolumeX size={14} />
-                <span className="font-mono text-[10px] hidden sm:inline">
-                  BGM: OFF
-                </span>
-              </>
-            )}
+            <Crosshair size={20} />
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
+        </div>
+
+        {/* --- RIGHT GROUP: USER --- */}
+        <div>
+          {user ? (
+            <div className="flex items-center gap-4 group relative">
+              {/* User Name & Status */}
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-white font-mono text-xs font-bold uppercase tracking-widest text-shadow-glow">
+                  {user.displayName ||
+                    user.email?.split("@")[0] ||
+                    "OPERATOR_ID"}
+                </span>
+                <span className="text-[10px] text-green-500 font-mono flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  [CONNECTED]
+                </span>
+              </div>
+
+              {/* Avatar */}
+              <div className="w-10 h-10 rounded-full border border-green-500/50 bg-green-500/10 flex items-center justify-center cursor-pointer hover:bg-green-500/20 transition-colors relative z-10">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="User"
+                    className="w-full h-full rounded-full object-cover p-0.5"
+                  />
+                ) : (
+                  <User size={18} className="text-green-500" />
+                )}
+              </div>
+
+              {/* Logout Button (Hidden behind avatar, shows on hover) */}
+              <button
+                onClick={onLogout}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-x-14 transition-all duration-300 text-red-500 bg-black/80 p-2 rounded-full border border-red-500/30 hover:bg-red-500/10 hover:border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.2)]"
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="w-10 h-10 rounded-full border border-cyber-blue/50 flex items-center justify-center text-cyber-blue hover:bg-cyber-blue hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+              title="Login"
+            >
+              <LogIn size={18} />
+            </button>
+          )}
         </div>
       </div>
     </motion.header>
@@ -359,11 +375,9 @@ const Header = ({
 };
 
 /* =========================================
-   ROUTER & ANIMATION WRAPPER
+   ROUTER HELPERS
    ========================================= */
 
-// Component này xử lý việc định tuyến và animation
-// Nó nhận tất cả props từ App để truyền xuống các Page
 const AnimatedRoutes = ({
   cart,
   total,
@@ -371,12 +385,12 @@ const AnimatedRoutes = ({
   removeFromCart,
   clearCart,
   user,
+  setUser,
   scrollY,
   yText,
   opacityText,
 }) => {
   const location = useLocation();
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -391,6 +405,7 @@ const AnimatedRoutes = ({
             />
           }
         />
+        <Route path="/market" element={<ArsenalPage addToCart={addToCart} />} />
         <Route path="/missions" element={<MissionPage />} />
         <Route
           path="/checkout"
@@ -403,26 +418,41 @@ const AnimatedRoutes = ({
             />
           }
         />
+        <Route path="/login" element={<LoginPage setUser={setUser} />} />
       </Routes>
     </AnimatePresence>
   );
 };
 
-// Wrapper để Header dùng được hooks của Router (useNavigate)
+// Wrapper cho Header
 const HeaderWithRouter = (props) => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Ẩn Header nếu đang ở trang checkout
-  if (location.pathname === "/checkout") return null;
+  if (location.pathname === "/checkout" || location.pathname === "/login")
+    return null;
 
   return (
     <Header
       {...props}
+      onGoHome={() => navigate("/")}
+      onOpenMarket={() => navigate("/market")}
       onOpenCheckout={() => navigate("/checkout")}
       onOpenMissions={() => navigate("/missions")}
-      onGoHome={() => navigate("/")}
+      onOpenAuth={() => navigate("/login")}
     />
+  );
+};
+
+// Wrapper cho Footer
+const FooterWithRouter = () => {
+  const location = useLocation();
+  if (location.pathname === "/checkout" || location.pathname === "/login")
+    return null;
+
+  return (
+    <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600 relative z-50">
+      <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
+    </footer>
   );
 };
 
@@ -431,23 +461,17 @@ const HeaderWithRouter = (props) => {
    ========================================= */
 
 function App() {
-  // Global hooks
   const { scrollY } = useScroll();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
-
-  // Auth State
   const [user, setUser] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) setShowAuthModal(false);
     });
     return () => unsubscribe();
   }, []);
 
-  // Cart State
   const { cart, addToCart, removeFromCart, clearCart, total, lastUpdate } =
     useCart(user);
 
@@ -459,27 +483,16 @@ function App() {
     }
   };
 
-  // Parallax Values for Home Page
   const yText = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityText = useTransform(scrollY, [0, 300], [1, 0]);
 
   return (
     <Router>
-      <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans">
-        {/* Background 3D cố định - không reload khi đổi trang */}
+      <div className="relative min-h-screen w-full bg-cyber-black overflow-x-hidden font-sans flex flex-col">
+        {/* Background 3D */}
         <Scene3D scrollY={scrollY} />
 
-        {/* Global Modal */}
-        <AnimatePresence>
-          {showAuthModal && (
-            <AuthModal
-              onClose={() => setShowAuthModal(false)}
-              setUser={setUser}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Header (Điều hướng) */}
+        {/* Header */}
         <HeaderWithRouter
           cart={cart}
           removeFromCart={removeFromCart}
@@ -488,26 +501,29 @@ function App() {
           toggleAudio={toggleAudio}
           lastUpdate={lastUpdate}
           user={user}
-          onOpenAuth={() => setShowAuthModal(true)}
           onLogout={handleLogout}
         />
 
-        {/* Khu vực nội dung thay đổi (Pages) */}
-        <AnimatedRoutes
-          cart={cart}
-          total={total}
-          addToCart={addToCart}
-          removeFromCart={removeFromCart}
-          clearCart={clearCart}
-          user={user}
-          scrollY={scrollY}
-          yText={yText}
-          opacityText={opacityText}
-        />
+        {/* Nội dung chính (đẩy Footer xuống) */}
+        <main className="flex-1 relative z-10">
+          <AnimatedRoutes
+            cart={cart}
+            total={total}
+            addToCart={addToCart}
+            removeFromCart={removeFromCart}
+            clearCart={clearCart}
+            user={user}
+            setUser={setUser}
+            scrollY={scrollY}
+            yText={yText}
+            opacityText={opacityText}
+          />
+        </main>
 
-        {/* Global Widgets */}
+        {/* Global Widgets & Footer */}
         <AIChat />
         <BackToTop />
+        <FooterWithRouter />
       </div>
     </Router>
   );

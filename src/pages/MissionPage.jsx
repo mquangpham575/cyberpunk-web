@@ -11,7 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-// Import dữ liệu
+// Data import
 import { MISSION_DATA } from "../data/missionData";
 
 const MissionPage = () => {
@@ -19,14 +19,14 @@ const MissionPage = () => {
   const [selectedMission, setSelectedMission] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  // Xử lý phím Escape
+  // Handle Escape key navigation
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         if (selectedMission) {
           setSelectedMission(null);
         } else {
-          navigate("/"); // Quay về trang chủ
+          navigate("/"); // Return to home route
         }
       }
     };
@@ -34,6 +34,7 @@ const MissionPage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedMission, navigate]);
 
+  // Helper: Resolve color class based on risk level
   const getRiskColor = (risk) => {
     switch (risk) {
       case "Low":
@@ -49,6 +50,7 @@ const MissionPage = () => {
     }
   };
 
+  // Helper: Map mission type to icon component
   const getIcon = (type) => {
     switch (type) {
       case "Theft":
@@ -62,6 +64,7 @@ const MissionPage = () => {
     }
   };
 
+  // Helper: Translate filter state to display label
   const getFilterLabel = (f) => {
     switch (f) {
       case "all":
@@ -84,6 +87,7 @@ const MissionPage = () => {
     >
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
 
+      {/* Header Section */}
       <header className="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/80 backdrop-blur z-10">
         <button
           onClick={() => navigate("/")}
@@ -108,6 +112,7 @@ const MissionPage = () => {
       </header>
 
       <div className="flex-1 flex overflow-hidden relative z-10">
+        {/* Sidebar: Filter controls */}
         <aside className="w-64 border-r border-white/10 p-6 hidden md:block">
           <h3 className="text-sm font-mono text-gray-500 mb-6">BỘ LỌC</h3>
           <ul className="space-y-4 font-mono text-sm">
@@ -135,6 +140,7 @@ const MissionPage = () => {
           </ul>
         </aside>
 
+        {/* Main Content: Mission Grid */}
         <main className="flex-1 p-8 overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {MISSION_DATA.filter(
@@ -187,6 +193,7 @@ const MissionPage = () => {
         </main>
       </div>
 
+      {/* Modal: Mission Details */}
       <AnimatePresence>
         {selectedMission && (
           <motion.div

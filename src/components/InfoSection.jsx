@@ -1,6 +1,7 @@
+// src/components/InfoSection.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Activity, Wifi, Aperture, RotateCw, ChevronDown } from "lucide-react";
+import { Activity, Wifi, Aperture, RotateCw } from "lucide-react";
 
 // --- CONSTANTS & CONFIG ---
 const TERMINAL_LOGS = [
@@ -146,12 +147,6 @@ const CoreTelemetry = () => (
 // --- MAIN COMPONENT ---
 
 const InfoSection = () => {
-  const handleScrollToMarket = () => {
-    document
-      .getElementById("black-market")
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <section
       id="system-status"
@@ -221,23 +216,6 @@ const InfoSection = () => {
             </div>
           </div>
         </div>
-
-        {/* Scroll Indicator (Synced with App.jsx style) */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1, y: [0, 10, 0] }}
-          transition={{ delay: 0.5, duration: 2, repeat: Infinity }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-cyber-blue flex flex-col items-center gap-2 cursor-pointer z-20"
-          onClick={handleScrollToMarket}
-        >
-          <span className="text-[10px] font-mono tracking-[0.2em] uppercase opacity-70 shadow-black drop-shadow-md">
-            SCROLL DOWN
-          </span>
-          <ChevronDown
-            size={24}
-            className="drop-shadow-[0_0_5px_rgba(0,240,255,0.8)]"
-          />
-        </motion.div>
       </div>
 
       {/* Bottom Diagnostics Marquee */}

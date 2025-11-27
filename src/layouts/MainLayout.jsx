@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Header from "../components/Header"; // Đảm bảo bạn đã có file Header (tách từ App cũ)
+import Header from "../components/Header";
 import AIChat from "../components/AIChat";
 import BackToTop from "../components/BackToTop";
 
@@ -14,16 +14,18 @@ const MainLayout = ({
   user,
   onOpenAuth,
   onLogout,
-  onNavigate, // Hàm điều hướng truyền xuống Header
+  onNavigate,
 }) => {
   const location = useLocation();
 
-  // Ẩn Header nếu đang ở trang checkout (tùy chọn)
-  const showHeader = location.pathname !== "/checkout";
+  // Determine UI visibility based on current route
+  const isCheckoutPage = location.pathname === "/checkout";
 
   return (
-    <div className="relative min-h-screen w-full bg-transparent font-sans">
-      {showHeader && (
+    // FIX 1: Thêm 'flex flex-col' để quản lý layout dọc chuẩn xác
+    <div className="relative min-h-screen w-full bg-transparent font-sans flex flex-col">
+      {/* Header Section */}
+      {!isCheckoutPage && (
         <Header
           cart={cart}
           removeFromCart={removeFromCart}
@@ -34,23 +36,25 @@ const MainLayout = ({
           user={user}
           onOpenAuth={onOpenAuth}
           onLogout={onLogout}
-          // Truyền các sự kiện điều hướng cho Header
+          // Navigation callbacks
           onCheckout={() => onNavigate("/checkout")}
           onOpenMissions={() => onNavigate("/missions")}
         />
       )}
 
-      {/* Nơi nội dung các trang con (Home, Missions) hiển thị */}
-      <main className="relative z-10">
+      {/* Main Content Area (Nested Routes) */}
+      {/* FIX 2: Thêm 'flex-1' để nội dung chính đẩy Footer xuống dưới cùng */}
+      <main className="relative z-10 flex-1">
         <Outlet />
       </main>
 
-      {/* Các tiện ích cố định */}
-      {location.pathname !== "/checkout" && (
+      {/* Global Widgets & Footer */}
+      {!isCheckoutPage && (
         <>
           <AIChat />
           <BackToTop />
-          <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600 relative z-10">
+          {/* FIX 3: Tăng z-index lên z-50 để đảm bảo Footer luôn nổi lên trên các hiệu ứng 3D/Background */}
+          <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600 relative">
             <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
           </footer>
         </>

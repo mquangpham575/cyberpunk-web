@@ -1,6 +1,17 @@
-import React, { useState, useMemo } from "react";
+// src/pages/ArsenalPage.jsx
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Check, Cpu, Shield, Zap, Target } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  X,
+  Check,
+  Cpu,
+  Shield,
+  Zap,
+  Target,
+  ArrowLeft,
+} from "lucide-react";
 
 // Data Import
 import { INVENTORY_DATA } from "../data/inventoryData";
@@ -60,7 +71,7 @@ const FilterButton = ({ label, active, onClick }) => (
   <button
     onClick={onClick}
     className={`
-      px-4 py-2.5 text-xs font-bold font-mono border transition-all duration-200
+      px-4 py-2.5 text-xs font-bold font-mono border transition-all duration-200 uppercase
       ${
         active
           ? "bg-cyber-blue text-black border-cyber-blue shadow-[0_0_10px_#00f0ff]"
@@ -83,7 +94,7 @@ const SearchBar = ({ value, onChange, onClear }) => (
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="SEARCH DATABASE..."
+      placeholder="TÌM KIẾM DỮ LIỆU..."
       className="w-full bg-black/50 border border-white/20 py-2.5 pl-10 pr-8 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue transition-colors uppercase placeholder:text-gray-700 relative z-10"
     />
     {value && (
@@ -105,12 +116,12 @@ const ItemDetailView = ({ item, onClose, addToCart }) => {
   const theme = RARITY_CONFIG[item.rarity];
   const isSoldOut = item.status === "sold_out";
 
-  // Fallback stats if missing from data
+  // Fallback stats with Vietnamese labels
   const stats = item.stats || [
-    { label: "DAMAGE", value: 85, icon: Target },
-    { label: "SPEED", value: 60, icon: Zap },
-    { label: "DURABILITY", value: 92, icon: Shield },
-    { label: "TECH", value: 75, icon: Cpu },
+    { label: "SÁT THƯƠNG", value: 85, icon: Target },
+    { label: "TỐC ĐỘ", value: 60, icon: Zap },
+    { label: "ĐỘ BỀN", value: 92, icon: Shield },
+    { label: "CÔNG NGHỆ", value: 75, icon: Cpu },
   ];
 
   return (
@@ -120,14 +131,14 @@ const ItemDetailView = ({ item, onClose, addToCart }) => {
       animate="show"
       exit="exit"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10 bg-black/80 backdrop-blur-md"
-      onClick={onClose} // Close on backdrop click
+      onClick={onClose}
     >
       <div
         className={`
           relative w-full max-w-4xl bg-black border border-white/10 flex flex-col md:flex-row overflow-hidden
           ${theme.shadow}
         `}
-        onClick={(e) => e.stopPropagation()} // Prevent backdrop click propagation
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
@@ -164,7 +175,7 @@ const ItemDetailView = ({ item, onClose, addToCart }) => {
               <span
                 className={`text-xs font-bold uppercase tracking-widest px-2 py-1 border ${theme.border} ${theme.color}`}
               >
-                {item.rarity} CLASS
+                HẠNG {item.rarity}
               </span>
               <span className="text-2xl font-mono text-white">
                 €$ {item.price}
@@ -180,7 +191,8 @@ const ItemDetailView = ({ item, onClose, addToCart }) => {
               <br />
               <br />
               <span className="text-gray-500 italic">
-                "Direct import from Arasaka Tower. No warranty if hacked."
+                "Hàng nhập trực tiếp từ tháp Arasaka. Không bảo hành nếu bị hack
+                hoặc phá hủy."
               </span>
             </p>
 
@@ -230,7 +242,7 @@ const ItemDetailView = ({ item, onClose, addToCart }) => {
                   }
                 `}
             >
-              {isSoldOut ? "SOLD OUT" : "CONFIRM PURCHASE"}
+              {isSoldOut ? "HẾT HÀNG" : "XÁC NHẬN MUA"}
             </button>
           </div>
         </div>
@@ -249,7 +261,7 @@ const ItemCard = ({ item, addToCart, onSelect }) => {
   const isPreOrder = item.status === "pre_order";
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Prevent modal opening when clicking buy
+    e.stopPropagation();
     if (isSoldOut) return;
     addToCart(item);
     setIsAdded(true);
@@ -261,15 +273,15 @@ const ItemCard = ({ item, addToCart, onSelect }) => {
     : "opacity-100";
 
   const renderButtonContent = () => {
-    if (isSoldOut) return "SOLD OUT";
+    if (isSoldOut) return "HẾT HÀNG";
     if (isAdded)
       return (
         <>
-          <Check size={14} /> ADDED
+          <Check size={14} /> ĐÃ THÊM
         </>
       );
-    if (isPreOrder) return "PRE-ORDER";
-    return "BUY NOW";
+    if (isPreOrder) return "ĐẶT TRƯỚC";
+    return "MUA NGAY";
   };
 
   return (
@@ -292,12 +304,12 @@ const ItemCard = ({ item, addToCart, onSelect }) => {
           </span>
           {isSoldOut && (
             <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-1">
-              SOLD OUT
+              HẾT HÀNG
             </span>
           )}
           {isPreOrder && (
             <span className="text-[10px] font-bold text-cyber-yellow bg-cyber-yellow/10 px-1 animate-pulse">
-              PRE-ORDER
+              ĐẶT TRƯỚC
             </span>
           )}
         </div>
@@ -311,7 +323,7 @@ const ItemCard = ({ item, addToCart, onSelect }) => {
         <span
           className={`text-[10px] font-bold uppercase tracking-widest ${theme.color}`}
         >
-          // TIER {item.rarity}
+          // CẤP {item.rarity}
         </span>
         <p className="mt-3 text-xs text-gray-400 font-mono leading-relaxed h-10 line-clamp-2">
           {item.desc}
@@ -364,16 +376,29 @@ const ItemCard = ({ item, addToCart, onSelect }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
+// --- MAIN PAGE COMPONENT ---
 
-const ArsenalSection = ({ addToCart }) => {
+const ArsenalPage = ({ addToCart }) => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // Handle Escape key
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        if (selectedItem) setSelectedItem(null);
+        else navigate("/");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedItem, navigate]);
+
   const FILTER_LABELS = {
-    ALL: "ALL",
-    WEAPONS: "WEAPONS",
+    ALL: "TẤT CẢ",
+    WEAPONS: "VŨ KHÍ",
     CYBERWARE: "CYBERWARE",
   };
 
@@ -389,76 +414,96 @@ const ArsenalSection = ({ addToCart }) => {
   }, [activeFilter, searchQuery]);
 
   return (
-    <>
-      <section
-        id="black-market"
-        className="relative z-10 w-full py-24 border-t border-white/10 bg-black/20"
-      >
-        <div className="container mx-auto px-6 md:px-12">
-          {/* --- HEADER & CONTROLS --- */}
-          <div className="flex flex-col xl:flex-row justify-between items-end mb-12 gap-8">
-            <div className="w-full xl:w-auto">
-              <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-2">
-                BLACK<span className="text-cyber-pink"> MARKET</span>
-              </h2>
-              <p className="text-gray-400 font-mono text-sm border-l-2 border-cyber-yellow pl-4 max-w-md">
-                Night City's largest underground arsenal. No questions asked. No
-                refunds.
-              </p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-4 items-end w-full xl:w-auto">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onClear={() => setSearchQuery("")}
-              />
-              <div className="flex gap-2 flex-wrap">
-                {["ALL", "WEAPONS", "CYBERWARE"].map((key) => (
-                  <FilterButton
-                    key={key}
-                    label={FILTER_LABELS[key]}
-                    active={activeFilter === key}
-                    onClick={() => setActiveFilter(key)}
-                  />
-                ))}
-              </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="min-h-screen w-full bg-black/95 pt-20 pb-24 relative overflow-hidden"
+    >
+      {/* Background Noise */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+
+      <div className="container mx-auto px-6 md:px-12 relative z-10">
+        {/* --- HEADER & CONTROLS --- */}
+
+        {/* Navigation: Back button */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-gray-400 hover:text-cyber-blue transition-colors group bg-black/50 px-3 py-2 rounded-sm border border-transparent hover:border-cyber-blue/30 w-fit"
+          >
+            <ArrowLeft
+              size={20}
+              className="group-hover:-translate-x-1 transition-transform"
+            />
+            <span className="font-mono text-sm uppercase tracking-widest hidden sm:inline">
+              QUAY LẠI (ESC)
+            </span>
+          </button>
+        </div>
+
+        <div className="flex flex-col xl:flex-row justify-between items-end mb-12 gap-8">
+          <div className="w-full xl:w-auto">
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-2">
+              CHỢ<span className="text-cyber-pink"> ĐEN</span>
+            </h2>
+            <p className="text-gray-400 font-mono text-sm border-l-2 border-cyber-yellow pl-4 max-w-md">
+              Kho vũ khí ngầm lớn nhất Night City. Không hỏi nguồn gốc. Miễn đổi
+              trả.
+            </p>
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 items-end w-full xl:w-auto">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onClear={() => setSearchQuery("")}
+            />
+            <div className="flex gap-2 flex-wrap">
+              {["ALL", "WEAPONS", "CYBERWARE"].map((key) => (
+                <FilterButton
+                  key={key}
+                  label={FILTER_LABELS[key]}
+                  active={activeFilter === key}
+                  onClick={() => setActiveFilter(key)}
+                />
+              ))}
             </div>
           </div>
-
-          {/* --- GRID DISPLAY --- */}
-          <AnimatePresence mode="wait">
-            {filteredItems.length > 0 ? (
-              <motion.div
-                key={activeFilter + searchQuery}
-                variants={ANIMATIONS.container}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {filteredItems.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    addToCart={addToCart}
-                    onSelect={setSelectedItem}
-                  />
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full py-20 text-center border border-dashed border-white/10 bg-black/20"
-              >
-                <p className="text-cyber-pink font-mono text-sm animate-pulse">
-                  &gt;&gt; ERROR: NO DATA FOUND FOR "{searchQuery.toUpperCase()}
-                  "
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
-      </section>
+
+        {/* --- GRID DISPLAY --- */}
+        <AnimatePresence mode="wait">
+          {filteredItems.length > 0 ? (
+            <motion.div
+              key={activeFilter + searchQuery}
+              variants={ANIMATIONS.container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredItems.map((item) => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  addToCart={addToCart}
+                  onSelect={setSelectedItem}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full py-20 text-center border border-dashed border-white/10 bg-black/20"
+            >
+              <p className="text-cyber-pink font-mono text-sm animate-pulse">
+                &gt;&gt; LỖI: KHÔNG TÌM THẤY DỮ LIỆU CHO "
+                {searchQuery.toUpperCase()}"
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* DETAIL OVERLAY */}
       <AnimatePresence>
@@ -470,8 +515,8 @@ const ArsenalSection = ({ addToCart }) => {
           />
         )}
       </AnimatePresence>
-    </>
+    </motion.div>
   );
 };
 
-export default ArsenalSection;
+export default ArsenalPage;
