@@ -227,7 +227,7 @@ const Header = ({
           {/* 2. Home */}
           <button onClick={onGoHome} className={iconBtnStyle} title="Home">
             <Home size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
           {/* 3. Market */}
@@ -237,7 +237,7 @@ const Header = ({
             title="Black Market"
           >
             <Store size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
           {/* 4. Cart */}
@@ -316,7 +316,7 @@ const Header = ({
             title="Missions"
           >
             <Crosshair size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
         </div>
 
