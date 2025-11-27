@@ -217,7 +217,7 @@ const Header = ({
               onClick={onOpenAuth}
               className="hidden md:block px-4 py-1 border border-cyber-blue text-cyber-blue font-mono text-[10px] hover:bg-cyber-blue hover:text-black transition-colors uppercase tracking-widest"
             >
-              LOGIN / REGISTER
+              Đăng nhập / Đăng kí
             </button>
           )}
 
@@ -241,13 +241,13 @@ const Header = ({
 
               <div className="p-4">
                 <h3 className="text-cyber-blue font-mono text-xs font-bold border-b border-white/10 pb-2 mb-2 flex justify-between">
-                  <span>CART</span>
+                  <span> Giỏ hàng </span>
                   <span>[{cart.length}]</span>
                 </h3>
 
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    Empty...
+                    Giỏ hàng trống...
                   </div>
                 ) : (
                   <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
@@ -289,7 +289,7 @@ const Header = ({
                 {cart.length > 0 && (
                   <div className="border-t border-white/10 pt-2">
                     <div className="flex justify-between items-center font-mono text-xs text-white mb-3">
-                      <span>TOTAL:</span>
+                      <span>Tổng tiền:</span>
                       <span className="text-cyber-yellow">
                         €$ {total.toLocaleString()}
                       </span>
@@ -298,7 +298,7 @@ const Header = ({
                       onClick={onCheckout}
                       className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase tracking-widest"
                     >
-                      CHECKOUT
+                      THANH TOÁN
                     </button>
                   </div>
                 )}
@@ -450,9 +450,9 @@ function App() {
                 </div>
 
                 <p className="text-gray-400 text-base md:text-lg max-w-lg font-sans border-l-2 border-cyber-blue pl-4 leading-relaxed backdrop-blur-sm bg-black/20 p-2 rounded-r-lg">
-                  Access restricted S-Rank prototype data. Experimental weaponry
-                  and next-gen Cyberware available. Authorized personnel and
-                  high-tier mercenaries only.
+                  Truy cập kho dữ liệu nguyên mẫu cấp S. Cung cấp vũ khí thực
+                  nghiệm và Cyberware thế hệ mới. Chỉ dành cho nhân sự được ủy
+                  quyền hoặc lính đánh thuê cao cấp.
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-6">
