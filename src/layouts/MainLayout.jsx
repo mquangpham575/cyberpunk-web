@@ -18,11 +18,11 @@ const MainLayout = ({
 }) => {
   const location = useLocation();
 
-  // Determine UI visibility based on current route
+  // Route-based visibility logic
   const isCheckoutPage = location.pathname === "/checkout";
 
   return (
-    // FIX 1: Thêm 'flex flex-col' để quản lý layout dọc chuẩn xác
+    // Layout: Flex column structure for sticky footer support
     <div className="relative min-h-screen w-full bg-transparent font-sans flex flex-col">
       {/* Header Section */}
       {!isCheckoutPage && (
@@ -42,8 +42,7 @@ const MainLayout = ({
         />
       )}
 
-      {/* Main Content Area (Nested Routes) */}
-      {/* FIX 2: Thêm 'flex-1' để nội dung chính đẩy Footer xuống dưới cùng */}
+      {/* Main Content: Flex-1 expands to fill available space */}
       <main className="relative z-10 flex-1">
         <Outlet />
       </main>
@@ -53,8 +52,8 @@ const MainLayout = ({
         <>
           <AIChat />
           <BackToTop />
-          {/* FIX 3: Tăng z-index lên z-50 để đảm bảo Footer luôn nổi lên trên các hiệu ứng 3D/Background */}
-          <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600 relative">
+          {/* Footer */}
+          <footer className="bg-black border-t border-white/10 py-8 text-center font-mono text-xs text-gray-600 relative z-50">
             <p>© 2077 ARASAKA CORP. ALL RIGHTS RESERVED.</p>
           </footer>
         </>

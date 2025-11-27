@@ -1,4 +1,3 @@
-// src/pages/ArsenalPage.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";

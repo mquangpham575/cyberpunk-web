@@ -7,7 +7,7 @@ const useCart = (user) => {
   const [cart, setCart] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(0);
 
-  // Helper: Khôi phục icon từ dữ liệu tĩnh
+  // Restore non-serializable data (React icons) from static inventory
   const rehydrateCart = (rawItems) => {
     return rawItems.map((item) => {
       const original = INVENTORY_DATA.find((i) => i.id === item.id);
@@ -15,7 +15,7 @@ const useCart = (user) => {
     });
   };
 
-  // Sync với Firebase hoặc LocalStorage
+  // Sync cart with Firestore (authenticated) or LocalStorage (guest)
   useEffect(() => {
     if (user) {
       const cartRef = doc(db, "carts", user.uid);
@@ -40,10 +40,12 @@ const useCart = (user) => {
     }
   }, [user]);
 
+  // Persist cart state to the appropriate storage backend
   const saveCart = async (newCart) => {
     setCart(newCart);
     setLastUpdate(Date.now());
-    // Loại bỏ icon (component React) trước khi lưu
+
+    // Sanitize data (remove icons) before storage
     const sanitizedCart = newCart.map(({ icon, ...rest }) => rest);
 
     if (user) {
@@ -58,10 +60,13 @@ const useCart = (user) => {
   };
 
   const addToCart = (item) => saveCart([...cart, item]);
+
   const removeFromCart = (indexToRemove) =>
     saveCart(cart.filter((_, index) => index !== indexToRemove));
+
   const clearCart = () => saveCart([]);
 
+  // Calculate total value, ignoring invalid or unknown prices
   const total = useMemo(() => {
     return cart.reduce((acc, item) => {
       if (item.price === "???") return acc;

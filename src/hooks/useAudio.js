@@ -4,6 +4,7 @@ const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
 
+  // Initialize audio instance and handle cleanup on unmount
   useEffect(() => {
     audioRef.current = new Audio(src);
     audioRef.current.loop = true;
@@ -13,6 +14,7 @@ const useAudio = (src) => {
     };
   }, [src]);
 
+  // Toggle playback state, handling browser autoplay policies
   const toggleAudio = () => {
     if (!audioRef.current) return;
     if (isMuted) {

@@ -1,4 +1,3 @@
-// src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -45,9 +44,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      // --- FIX LỖI Ở ĐÂY ---
-      // 1. pt-10 -> pt-28: Tăng khoảng cách bên trên để không bị Header che mất
-      // 2. z-50 -> z-40: Giảm z-index xuống thấp hơn Header (thường Header là z-50) để scroll mượt mà
       className="relative min-h-screen z-40 bg-black/80 backdrop-blur-md text-white overflow-y-auto pt-28 pb-20"
     >
       {/* Decorative background grid */}

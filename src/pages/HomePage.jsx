@@ -91,7 +91,6 @@ const HomePage = ({ scrollY, yText, opacityText }) => {
       {/* --- CONTENT SECTIONS --- */}
 
       {/* System Status Section */}
-      {/* Đảm bảo phần tử cuối cùng này KHÔNG có margin-bottom quá lớn */}
       <div id="system-status" className="relative z-10">
         <InfoSection />
       </div>

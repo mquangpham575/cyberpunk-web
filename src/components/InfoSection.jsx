@@ -1,4 +1,3 @@
-// src/components/InfoSection.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Activity, Wifi, Aperture, RotateCw } from "lucide-react";
