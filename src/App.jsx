@@ -35,8 +35,23 @@ import CheckoutPage from "./components/CheckoutPage";
 // =========================================
 
 const useCart = () => {
-  const [cart, setCart] = useState([]);
+  // 1. Khởi tạo state: Lấy dữ liệu từ LocalStorage nếu có
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem("arasaka_cart_v1");
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Lỗi đọc dữ liệu giỏ hàng:", error);
+      return [];
+    }
+  });
+
   const [lastUpdate, setLastUpdate] = useState(0);
+
+  // 2. Effect: Tự động lưu vào LocalStorage mỗi khi giỏ hàng thay đổi
+  useEffect(() => {
+    localStorage.setItem("arasaka_cart_v1", JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (item) => {
     setCart((prev) => [...prev, item]);
@@ -50,6 +65,7 @@ const useCart = () => {
 
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem("arasaka_cart_v1"); // Xóa sạch bộ nhớ
     setLastUpdate(Date.now());
   };
 
