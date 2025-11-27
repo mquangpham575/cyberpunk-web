@@ -1,6 +1,9 @@
+// src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../services/firebase";
 import {
   CheckCircle,
   CreditCard,
@@ -16,12 +19,57 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("credit");
 
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
+
+  // --- LOGIC MỚI: TỰ ĐỘNG LẤY TÊN VÀ THÔNG TIN TỪ FIRESTORE ---
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        // Mặc định lấy từ Auth trước
+        let initialData = {
+          name: user.displayName || "",
+          phone: "",
+          address: "",
+        };
+
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+
+            // Ưu tiên dữ liệu trong Database (vì user có thể đã sửa tên ở trang Profile)
+            // Nếu DB không có tên thì mới dùng tên của Auth
+            initialData.name = data.displayName || user.displayName || "";
+            initialData.phone = data.phoneNumber || "";
+            initialData.address = data.address || "";
+          }
+        } catch (error) {
+          console.error("Error fetching delivery info:", error);
+        }
+
+        setFormData(initialData);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   // Handle 'Escape' key navigation
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        navigate("/");
-      }
+      if (event.key === "Escape") navigate("/");
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -31,6 +79,7 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
     e.preventDefault();
     setIsProcessing(true);
 
+    // Simulate transaction processing
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);
@@ -46,14 +95,13 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
       transition={{ duration: 0.5, ease: "easeInOut" }}
       className="relative min-h-screen z-40 bg-black/80 backdrop-blur-md text-white overflow-y-auto pt-28 pb-20"
     >
-      {/* Decorative background grid */}
       <div className="fixed inset-0 pointer-events-none opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[32px_32px]"></div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header Title của trang Checkout */}
+        {/* Header Section */}
         <header className="flex justify-between items-center border-b border-white/10 pb-6 mb-8">
           <button
-            onClick={() => navigate("")}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-400 hover:text-cyber-blue transition-colors group bg-black/50 px-3 py-2 rounded-sm border border-transparent hover:border-cyber-blue/30"
           >
             <ArrowLeft
@@ -74,11 +122,11 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Left Column: Input Form */}
+          {/* Left Column: Form & Payment */}
           <div className="lg:col-span-7 space-y-8">
             {!isSuccess ? (
               <form onSubmit={handlePayment} className="space-y-8">
-                {/* Section: Delivery Info */}
+                {/* Section: Delivery Information */}
                 <div className="bg-black/60 border border-white/10 p-6 relative overflow-hidden group hover:border-cyber-blue/50 transition-colors backdrop-blur-sm">
                   <h3 className="text-xl font-display text-cyber-yellow mb-6 flex items-center gap-2">
                     <MapPin className="text-cyber-yellow" /> ĐIỂM GIAO HÀNG
@@ -91,19 +139,24 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                       <input
                         required
                         type="text"
-                        placeholder="NGUYEN VAN A"
-                        defaultValue={user?.displayName || ""}
+                        name="name"
+                        placeholder="TÊN NGƯỜI NHẬN..."
+                        value={formData.name} // Đã auto fill từ DB
+                        onChange={handleInputChange}
                         className="w-full bg-white/5 border border-white/20 p-3 text-white focus:border-cyber-blue outline-none transition-all font-mono"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-mono text-gray-400 uppercase">
-                        Kênh Liên Lạc / SĐT
+                        Số điện thoại
                       </label>
                       <input
                         required
                         type="text"
+                        name="phone"
                         placeholder="09xx-xxx-xxx"
+                        value={formData.phone}
+                        onChange={handleInputChange}
                         className="w-full bg-white/5 border border-white/20 p-3 text-white focus:border-cyber-blue outline-none transition-all font-mono"
                       />
                     </div>
@@ -114,21 +167,22 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                       <input
                         required
                         type="text"
-                        placeholder="Night City, Quận Watson, Tòa nhà H10"
+                        name="address"
+                        placeholder="Nhập địa chỉ chi tiết..."
+                        value={formData.address}
+                        onChange={handleInputChange}
                         className="w-full bg-white/5 border border-white/20 p-3 text-white focus:border-cyber-blue outline-none transition-all font-mono"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Section: Payment Info */}
+                {/* Section: Payment Method */}
                 <div className="bg-black/60 border border-white/10 p-6 relative overflow-hidden group hover:border-cyber-pink/50 transition-colors backdrop-blur-sm">
                   <h3 className="text-xl font-display text-cyber-pink mb-6 flex items-center gap-2">
                     <CreditCard className="text-cyber-pink" />
                     PHƯƠNG THỨC THANH TOÁN
                   </h3>
-
-                  {/* Payment Method Selector */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <button
                       type="button"
@@ -144,7 +198,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                         CHIP TÍN DỤNG
                       </span>
                     </button>
-
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("cod")}
@@ -161,7 +214,7 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                     </button>
                   </div>
 
-                  {/* Dynamic Form Content */}
+                  {/* Dynamic Payment Details */}
                   <div className="space-y-4 animate-fade-in">
                     {paymentMethod === "credit" ? (
                       <>
@@ -197,7 +250,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                         </div>
                       </>
                     ) : (
-                      // COD Info View
                       <div className="border border-green-500/30 bg-green-500/5 p-6 flex flex-col items-center text-center space-y-3">
                         <Banknote className="text-green-500" size={32} />
                         <h4 className="text-white font-display text-lg">
@@ -216,18 +268,15 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                   </div>
                 </div>
 
-                {/* Submit Button */}
                 <button
                   disabled={isProcessing || cart.length === 0}
-                  className={`w-full py-4 text-xl font-bold font-display uppercase tracking-widest transition-all clip-path-polygon shadow-lg
-                      ${
-                        isProcessing
-                          ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-                          : paymentMethod === "cod"
-                          ? "bg-green-500 text-black hover:bg-white hover:shadow-[0_0_20px_#22c55e]"
-                          : "bg-cyber-blue text-black hover:bg-white hover:shadow-[0_0_20px_white]"
-                      }
-                    `}
+                  className={`w-full py-4 text-xl font-bold font-display uppercase tracking-widest transition-all clip-path-polygon shadow-lg ${
+                    isProcessing
+                      ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                      : paymentMethod === "cod"
+                      ? "bg-green-500 text-black hover:bg-white hover:shadow-[0_0_20px_#22c55e]"
+                      : "bg-cyber-blue text-black hover:bg-white hover:shadow-[0_0_20px_white]"
+                  }`}
                 >
                   {isProcessing
                     ? "ĐANG XỬ LÝ GIAO DỊCH..."
@@ -265,7 +314,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
               <h3 className="text-sm font-mono text-gray-500 border-b border-white/10 pb-4 mb-4">
                 // CHI_TIẾT_ĐƠN_HÀNG_V1.0
               </h3>
-
               <div className="max-h-[400px] overflow-y-auto custom-scrollbar space-y-4 pr-2">
                 {cart.length === 0 ? (
                   <p className="text-gray-600 italic font-mono text-sm">
@@ -307,8 +355,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
                   ))
                 )}
               </div>
-
-              {/* Totals Section */}
               <div className="mt-6 pt-6 border-t border-white/10 space-y-2 font-mono text-sm">
                 <div className="flex justify-between text-gray-500">
                   <span>TẠM TÍNH</span>

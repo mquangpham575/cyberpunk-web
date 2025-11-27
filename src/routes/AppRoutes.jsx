@@ -8,6 +8,7 @@ import MissionPage from "../pages/MissionPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import LoginPage from "../pages/LoginPage";
 import ArsenalPage from "../pages/ArsenalPage";
+import UserInfoPage from "../pages/UserInfoPage";
 
 const AppRoutes = ({
   cart,
@@ -50,6 +51,10 @@ const AppRoutes = ({
           }
         />
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route
+          path="/profile"
+          element={<UserInfoPage user={user} onLogout={() => auth.signOut()} />}
+        />
       </Routes>
     </AnimatePresence>
   );

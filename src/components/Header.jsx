@@ -22,14 +22,17 @@ const Header = ({
   onLogout,
 }) => {
   const navigate = useNavigate();
-  // const location = useLocation(); // Not needed for hiding anymore
+  const location = useLocation();
+
+  // Hide header only on the Login page
+  if (location.pathname === "/login") return null;
 
   const iconBtnStyle =
     "p-2 text-gray-400 hover:text-cyber-blue transition-colors relative group hover:bg-white/5 rounded-sm";
 
   return (
     <motion.header
-      // Always visible (Pinned)
+      // Pinned header: Always visible at the top
       initial={{ y: 0 }}
       animate={{ y: 0 }}
       className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
@@ -39,9 +42,9 @@ const Header = ({
       `}</style>
 
       <div className="container mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
-        {/* LEFT GROUP */}
+        {/* Left Navigation Group */}
         <div className="flex items-center gap-1 md:gap-4 bg-black/40 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
-          {/* BGM Button */}
+          {/* BGM Visualizer Control */}
           <button
             onClick={toggleAudio}
             className="flex items-end justify-center gap-[3px] w-8 h-6 px-1 pb-1 cursor-pointer hover:opacity-80 transition-opacity mr-4 border-r border-white/10 pr-4 overflow-hidden"
@@ -62,7 +65,7 @@ const Header = ({
             ))}
           </button>
 
-          {/* Navigation Buttons */}
+          {/* Nav: Home */}
           <button
             onClick={() => navigate("/")}
             className={iconBtnStyle}
@@ -72,6 +75,7 @@ const Header = ({
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
+          {/* Nav: Market */}
           <button
             onClick={() => navigate("/market")}
             className={iconBtnStyle}
@@ -81,9 +85,13 @@ const Header = ({
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
-          {/* Cart Dropdown */}
+          {/* Nav: Cart (with Hover Dropdown) */}
           <div className="group/cart relative">
-            <div className={`${iconBtnStyle} cursor-pointer`}>
+            {/* Click on cart icon navigates to checkout */}
+            <div
+              className={`${iconBtnStyle} cursor-pointer`}
+              onClick={() => navigate("/checkout")}
+            >
               <div className="relative">
                 <ShoppingBag size={20} />
                 {cart.length > 0 && (
@@ -93,21 +101,22 @@ const Header = ({
                 )}
               </div>
             </div>
-            {/* Dropdown Content */}
+
+            {/* Cart Preview Dropdown */}
             <div className="absolute left-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover/cart:opacity-100 group-hover/cart:visible transition-all duration-300 transform translate-y-2 group-hover/cart:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
               <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
               <div className="p-4">
                 <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
                   <span className="text-cyber-blue font-mono text-xs">
-                    Giỏ hàng
+                    CART
                   </span>
                   <span className="text-white font-mono text-xs">
-                    Tổng tiền: {total.toLocaleString()}$
+                    Total: {total.toLocaleString()}$
                   </span>
                 </div>
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    [Giỏ hàng trống]
+                    [Cart Empty]
                   </div>
                 ) : (
                   <>
@@ -130,7 +139,10 @@ const Header = ({
                             </span>
                           </div>
                           <button
-                            onClick={() => removeFromCart(index)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent navigation on delete
+                              removeFromCart(index);
+                            }}
                             className="text-gray-600 hover:text-red-500"
                           >
                             <Trash2 size={12} />
@@ -142,7 +154,7 @@ const Header = ({
                       onClick={() => navigate("/checkout")}
                       className="w-full bg-cyber-blue text-black font-bold font-mono text-xs py-2 hover:bg-white transition-colors uppercase"
                     >
-                      Thanh toán
+                      Checkout
                     </button>
                   </>
                 )}
@@ -150,6 +162,7 @@ const Header = ({
             </div>
           </div>
 
+          {/* Nav: Missions */}
           <button
             onClick={() => navigate("/missions")}
             className={iconBtnStyle}
@@ -160,7 +173,7 @@ const Header = ({
           </button>
         </div>
 
-        {/* RIGHT GROUP */}
+        {/* Right User Group */}
         <div>
           {user ? (
             <div className="flex items-center gap-4 group relative">
@@ -173,7 +186,12 @@ const Header = ({
                   [CONNECTED]
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-full border border-green-500/50 bg-green-500/10 flex items-center justify-center cursor-pointer hover:bg-green-500/20 transition-colors relative z-10">
+
+              {/* User Avatar (Click to Profile) */}
+              <div
+                onClick={() => navigate("/profile")}
+                className="w-10 h-10 rounded-full border border-green-500/50 bg-green-500/10 flex items-center justify-center cursor-pointer hover:bg-green-500/20 transition-colors relative z-10"
+              >
                 {user.photoURL ? (
                   <img
                     src={user.photoURL}
@@ -184,6 +202,8 @@ const Header = ({
                   <User size={18} className="text-green-500" />
                 )}
               </div>
+
+              {/* Logout Action */}
               <button
                 onClick={onLogout}
                 className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-x-14 transition-all duration-300 text-red-500 bg-black/80 p-2 rounded-full border border-red-500/30 hover:bg-red-500/10"
