@@ -1,8 +1,8 @@
+// src/pages/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  X,
   CheckCircle,
   CreditCard,
   MapPin,
@@ -15,13 +15,13 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("credit"); // 'credit' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState("credit");
 
   // Handle 'Escape' key navigation
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        navigate("/"); // Return to home
+        navigate("/");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -32,7 +32,6 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    // Simulate payment processing delay
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);
@@ -46,17 +45,16 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: "100%" }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      // Styling notes:
-      // 1. Used 'min-h-screen' instead of fixed positioning for scrolling
-      // 2. 'bg-black/80' provides transparency for depth
-      // 3. 'backdrop-blur-md' ensures text readability over 3D background elements
-      className="relative min-h-screen z-50 bg-black/80 backdrop-blur-md text-white overflow-y-auto pt-10 pb-20"
+      // --- FIX LỖI Ở ĐÂY ---
+      // 1. pt-10 -> pt-28: Tăng khoảng cách bên trên để không bị Header che mất
+      // 2. z-50 -> z-40: Giảm z-index xuống thấp hơn Header (thường Header là z-50) để scroll mượt mà
+      className="relative min-h-screen z-40 bg-black/80 backdrop-blur-md text-white overflow-y-auto pt-28 pb-20"
     >
-      {/* Decorative background grid (low opacity to avoid visual clutter) */}
+      {/* Decorative background grid */}
       <div className="fixed inset-0 pointer-events-none opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[32px_32px]"></div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
+        {/* Header Title của trang Checkout */}
         <header className="flex justify-between items-center border-b border-white/10 pb-6 mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -71,7 +69,7 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
             </span>
           </button>
           <div className="text-2xl font-display tracking-widest text-white text-shadow-glow">
-            CỔNG<span className="text-cyber-blue">_THANH_TOÁN</span>
+            CỔNG<span className="text-cyber-blue"> THANH TOÁN</span>
           </div>
           <div className="flex items-center gap-2 text-green-500 font-mono text-xs bg-green-500/10 px-3 py-1 border border-green-500/30">
             <ShieldCheck size={16} />
@@ -267,7 +265,7 @@ const CheckoutPage = ({ cart, total, onClearCart, user }) => {
 
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
-            <div className="sticky top-8 bg-black/60 backdrop-blur-md border border-white/10 p-6">
+            <div className="sticky top-28 bg-black/60 backdrop-blur-md border border-white/10 p-6">
               <h3 className="text-sm font-mono text-gray-500 border-b border-white/10 pb-4 mb-4">
                 // CHI_TIẾT_ĐƠN_HÀNG_V1.0
               </h3>

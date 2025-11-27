@@ -1,3 +1,4 @@
+// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,36 +19,20 @@ const Header = ({
   total,
   isMuted,
   toggleAudio,
-  lastUpdate,
   user,
   onLogout,
 }) => {
-  const { scrollY } = useScroll();
-  const [hidden, setHidden] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Logic ẩn hiện khi scroll
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious();
-    setHidden(latest > previous && latest > 150);
-  });
-
-  useEffect(() => {
-    if (lastUpdate > 0) setHidden(false);
-  }, [lastUpdate]);
-
-  // Tự động ẩn Header ở trang Checkout/Login
-  if (["/checkout", "/login"].includes(location.pathname)) return null;
+  // const location = useLocation(); // Not needed for hiding anymore
 
   const iconBtnStyle =
     "p-2 text-gray-400 hover:text-cyber-blue transition-colors relative group hover:bg-white/5 rounded-sm";
 
   return (
     <motion.header
-      variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
-      animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
+      // Always visible (Pinned)
+      initial={{ y: 0 }}
+      animate={{ y: 0 }}
       className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
     >
       <style>{`
@@ -85,7 +70,7 @@ const Header = ({
             title="Home"
           >
             <Home size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
           <button
@@ -94,7 +79,7 @@ const Header = ({
             title="Black Market"
           >
             <Store size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
 
           {/* Cart Dropdown */}
@@ -109,9 +94,9 @@ const Header = ({
                 )}
               </div>
             </div>
-            {/* ... (Giữ nguyên phần dropdown code) ... */}
+            {/* Dropdown Content */}
             <div className="absolute left-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover/cart:opacity-100 group-hover/cart:visible transition-all duration-300 transform translate-y-2 group-hover/cart:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-              {/* Cart Content Here (Copy từ code cũ) */}
+              <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
               <div className="p-4">
                 <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
                   <span className="text-cyber-blue font-mono text-xs">
@@ -172,7 +157,7 @@ const Header = ({
             title="Missions"
           >
             <Crosshair size={20} />
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyber-blue group-hover:w-full transition-all duration-300"></span>
           </button>
         </div>
 
