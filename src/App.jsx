@@ -472,7 +472,10 @@ function App() {
         {/* Global Modal */}
         <AnimatePresence>
           {showAuthModal && (
-            <AuthModal onClose={() => setShowAuthModal(false)} />
+            <AuthModal
+              onClose={() => setShowAuthModal(false)}
+              setUser={setUser}
+            />
           )}
         </AnimatePresence>
 
