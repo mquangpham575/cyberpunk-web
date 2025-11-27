@@ -16,12 +16,13 @@ import {
   LogOut,
 } from "lucide-react";
 
-// --- FIREBASE IMPORTS ---
+// Firebase Services
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "./services/firebase.js";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "./services/firebase.js";
 import AuthModal from "./components/AuthModal";
 
-// --- IMPORTS ---
+// Component Imports
 import Scene3D from "./components/Scene3D.jsx";
 import { CyberButton, GlitchTitle } from "./components/UIComponents";
 import InfoSection from "./components/InfoSection";
@@ -30,40 +31,99 @@ import AIChat from "./components/AIChat";
 import BackToTop from "./components/BackToTop";
 import CheckoutPage from "./components/CheckoutPage";
 
-// =========================================
-// CUSTOM HOOKS
-// =========================================
+// Data Import (Required for rehydrating icons)
+import { INVENTORY_DATA } from "./data/inventoryData";
 
-const useCart = () => {
+/* =========================================
+   CUSTOM HOOKS
+   ========================================= */
+
+// Cart Management Hook with Cloud/Local Sync
+const useCart = (user) => {
   const [cart, setCart] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(0);
 
-  const addToCart = (item) => {
-    setCart((prev) => [...prev, item]);
+  // Helper: Restore icons to cart items from source data
+  const rehydrateCart = (rawItems) => {
+    return rawItems.map((item) => {
+      const original = INVENTORY_DATA.find((i) => i.id === item.id);
+      return { ...item, icon: original ? original.icon : null };
+    });
+  };
+
+  // Data Synchronization Effect
+  useEffect(() => {
+    if (user) {
+      // Authenticated: Sync with Firestore
+      const cartRef = doc(db, "carts", user.uid);
+      const unsubscribe = onSnapshot(cartRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const cloudItems = docSnapshot.data().items || [];
+          setCart(rehydrateCart(cloudItems));
+        } else {
+          // Fallback: Check local storage for unsynced data
+          const localCart = localStorage.getItem("arasaka_cart_v1");
+          if (!localCart) setCart([]);
+        }
+      });
+      return () => unsubscribe();
+    } else {
+      // Guest: Use LocalStorage
+      try {
+        const savedCart = localStorage.getItem("arasaka_cart_v1");
+        if (savedCart) setCart(rehydrateCart(JSON.parse(savedCart)));
+        else setCart([]);
+      } catch (error) {
+        setCart([]);
+      }
+    }
+  }, [user]);
+
+  // Persistence Logic (Strip icons before saving)
+  const saveCart = async (newCart) => {
+    setCart(newCart); // Update UI immediately
     setLastUpdate(Date.now());
+
+    // Remove icon components (symbols) to prevent Firestore errors
+    const sanitizedCart = newCart.map(({ icon, ...rest }) => rest);
+
+    if (user) {
+      // Save to Cloud
+      try {
+        await setDoc(doc(db, "carts", user.uid), { items: sanitizedCart });
+      } catch (error) {
+        console.error("Firestore Save Error:", error);
+      }
+    } else {
+      // Save to LocalStorage
+      localStorage.setItem("arasaka_cart_v1", JSON.stringify(sanitizedCart));
+    }
+  };
+
+  const addToCart = (item) => {
+    saveCart([...cart, item]);
   };
 
   const removeFromCart = (indexToRemove) => {
-    setCart((prev) => prev.filter((_, index) => index !== indexToRemove));
-    setLastUpdate(Date.now());
+    saveCart(cart.filter((_, index) => index !== indexToRemove));
   };
 
   const clearCart = () => {
-    setCart([]);
-    setLastUpdate(Date.now());
+    saveCart([]);
   };
 
   const total = useMemo(() => {
     return cart.reduce((acc, item) => {
       if (item.price === "???") return acc;
-      const priceNumber = parseInt(item.price.replace(/,/g, ""), 10);
-      return acc + (isNaN(priceNumber) ? 0 : priceNumber);
+      const price = parseInt(item.price.replace(/,/g, ""), 10);
+      return acc + (isNaN(price) ? 0 : price);
     }, 0);
   }, [cart]);
 
   return { cart, addToCart, removeFromCart, clearCart, total, lastUpdate };
 };
 
+// Background Audio Hook
 const useAudio = (src) => {
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
@@ -80,9 +140,7 @@ const useAudio = (src) => {
   const toggleAudio = () => {
     if (!audioRef.current) return;
     if (isMuted) {
-      audioRef.current
-        .play()
-        .catch((e) => console.warn("Audio autoplay blocked:", e));
+      audioRef.current.play().catch((e) => console.warn("Audio blocked:", e));
       setIsMuted(false);
     } else {
       audioRef.current.pause();
@@ -93,9 +151,9 @@ const useAudio = (src) => {
   return { isMuted, toggleAudio };
 };
 
-// =========================================
-// HEADER (ĐÃ SỬA: BỎ SYS:NORMAL, GIỮ LOGIN)
-// =========================================
+/* =========================================
+   HEADER COMPONENT
+   ========================================= */
 
 const Header = ({
   cart,
@@ -114,25 +172,16 @@ const Header = ({
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious();
-    if (latest > previous && latest > 150) {
-      setHidden(true);
-    } else {
-      setHidden(false);
-    }
+    setHidden(latest > previous && latest > 150);
   });
 
   useEffect(() => {
-    if (lastUpdate > 0) {
-      setHidden(false);
-    }
+    if (lastUpdate > 0) setHidden(false);
   }, [lastUpdate]);
 
   return (
     <motion.header
-      variants={{
-        visible: { y: 0 },
-        hidden: { y: "-100%" },
-      }}
+      variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
       animate={hidden ? "hidden" : "visible"}
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className="fixed top-0 left-0 w-full z-50 bg-linear-to-b from-black/90 to-transparent backdrop-blur-sm transition-all duration-300"
@@ -147,7 +196,7 @@ const Header = ({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* --- USER STATUS / LOGIN BUTTON --- */}
+          {/* User Status / Login */}
           {user ? (
             <div className="hidden md:flex items-center gap-2 px-3 py-1 border border-green-500/50 bg-green-500/10 backdrop-blur-md transition-colors">
               <User size={12} className="text-green-500" />
@@ -168,14 +217,13 @@ const Header = ({
               onClick={onOpenAuth}
               className="hidden md:block px-4 py-1 border border-cyber-blue text-cyber-blue font-mono text-[10px] hover:bg-cyber-blue hover:text-black transition-colors uppercase tracking-widest"
             >
-              Đăng nhập/ Đăng kí
+              LOGIN / REGISTER
             </button>
           )}
 
-          {/* --- CART DROPDOWN SYSTEM (ĐÃ GỌN GÀNG) --- */}
+          {/* Cart Dropdown System */}
           <div className="group relative">
             <div className="hidden md:flex items-center gap-2 cursor-pointer border border-cyber-blue px-3 py-1 rounded-sm bg-black/50 backdrop-blur-md hover:bg-cyber-blue/10 transition-colors">
-              {/* ĐÃ XÓA "SYS: NORMAL" Ở ĐÂY */}
               <ShoppingBag size={14} className="text-cyber-blue" />
               {cart.length > 0 && (
                 <span className="text-[10px] font-bold text-black bg-cyber-blue px-1 ml-1">
@@ -184,20 +232,22 @@ const Header = ({
               )}
             </div>
 
-            {/* Hover Dropdown */}
+            {/* Dropdown Content */}
             <div className="absolute right-0 top-full mt-4 w-72 bg-black/95 border border-cyber-blue backdrop-blur-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+              {/* Bridge for hover state */}
+              <div className="absolute -top-4 left-0 w-full h-4 bg-transparent"></div>
               <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white"></div>
               <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white"></div>
 
               <div className="p-4">
                 <h3 className="text-cyber-blue font-mono text-xs font-bold border-b border-white/10 pb-2 mb-2 flex justify-between">
-                  <span> Giỏ hàng </span>
+                  <span>CART</span>
                   <span>[{cart.length}]</span>
                 </h3>
 
                 {cart.length === 0 ? (
                   <div className="text-gray-500 font-mono text-xs py-4 text-center italic">
-                    Giỏ hàng trống...
+                    Empty...
                   </div>
                 ) : (
                   <div className="max-h-60 overflow-y-auto space-y-2 mb-3 custom-scrollbar">
@@ -239,7 +289,7 @@ const Header = ({
                 {cart.length > 0 && (
                   <div className="border-t border-white/10 pt-2">
                     <div className="flex justify-between items-center font-mono text-xs text-white mb-3">
-                      <span>Tổng tiền:</span>
+                      <span>TOTAL:</span>
                       <span className="text-cyber-yellow">
                         €$ {total.toLocaleString()}
                       </span>
@@ -256,6 +306,7 @@ const Header = ({
             </div>
           </div>
 
+          {/* Audio Toggle */}
           <button
             onClick={toggleAudio}
             className={`flex items-center gap-1 px-3 py-1 border rounded-sm transition-all duration-300 bg-black/50 backdrop-blur-md ${
@@ -299,37 +350,38 @@ const Header = ({
   );
 };
 
-// =========================================
-// MAIN APP LAYOUT
-// =========================================
+/* =========================================
+   MAIN APP LAYOUT
+   ========================================= */
 
 function App() {
   const { scrollY } = useScroll();
-  const { cart, addToCart, removeFromCart, clearCart, total, lastUpdate } =
-    useCart();
   const { isMuted, toggleAudio } = useAudio("/sounds/bgm.mp3");
 
   const [currentView, setCurrentView] = useState("home");
 
-  // AUTH STATE
+  // Auth State
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // Auth Observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
-        setShowAuthModal(false);
-      }
+      if (currentUser) setShowAuthModal(false);
     });
     return () => unsubscribe();
   }, []);
+
+  // Initialize Cart with User
+  const { cart, addToCart, removeFromCart, clearCart, total, lastUpdate } =
+    useCart(user);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Lỗi khi đăng xuất:", error);
+      console.error("Logout Error:", error);
     }
   };
 
@@ -398,9 +450,9 @@ function App() {
                 </div>
 
                 <p className="text-gray-400 text-base md:text-lg max-w-lg font-sans border-l-2 border-cyber-blue pl-4 leading-relaxed backdrop-blur-sm bg-black/20 p-2 rounded-r-lg">
-                  Truy cập kho dữ liệu nguyên mẫu cấp S. Cung cấp vũ khí thực
-                  nghiệm và Cyberware thế hệ mới. Chỉ dành cho nhân sự được ủy
-                  quyền hoặc lính đánh thuê cao cấp.
+                  Access restricted S-Rank prototype data. Experimental weaponry
+                  and next-gen Cyberware available. Authorized personnel and
+                  high-tier mercenaries only.
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-6">
